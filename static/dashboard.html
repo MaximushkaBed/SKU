@@ -1,0 +1,752 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <title data-i18n-title="dashboard.title">Кабинет — Самоконтроль подготовки</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="/app/app.css?v=18" />
+</head>
+<body>
+  <div class="page">
+    <header class="header site-header site-header-main">
+      <div class="site-header-main-inner">
+        <div class="site-header-main-left">
+          <a class="btn btn-primary" href="/app/dashboard.html" data-i18n="nav.dashboard">Кабинет</a>
+        </div>
+        <div class="site-header-main-right">
+          <a class="btn" href="/app/test.html" data-i18n="nav.test">Пройти тест</a>
+          <a class="btn" href="/app/history.html" data-i18n="nav.history">История</a>
+          <a class="btn" href="/app/plan.html" data-i18n="nav.plan">План</a>
+          <a class="btn" href="/app/analytics.html" data-i18n="nav.analytics">Аналитика</a>
+          <button class="btn btn-danger" id="btn-exit" type="button" data-i18n="nav.logout">Выйти</button>
+        </div>
+      </div>
+    </header>
+
+    <!-- HERO: profile + stat cards -->
+    <div class="dash-hero">
+      <div id="account-profile" class="account-profile-card"></div>
+      <div class="dash-stats" id="dash-stats">
+        <div class="dash-stat-card" id="stat-total">
+          <div class="dash-stat-val">—</div>
+          <div class="dash-stat-lbl" data-i18n="dashboard.total_tests">Всего тестов</div>
+        </div>
+        <div class="dash-stat-card glow-medium" id="stat-avg">
+          <div class="dash-stat-val score-tone-medium" id="stat-avg-val">—</div>
+          <div class="dash-stat-lbl" data-i18n="dashboard.average_score">Средний балл</div>
+        </div>
+        <div class="dash-stat-card" id="stat-level">
+          <div class="dash-stat-val" id="stat-level-val">—</div>
+          <div class="dash-stat-lbl" data-i18n="dashboard.level">Уровень</div>
+        </div>
+        <div class="dash-stat-card" id="stat-subjects">
+          <div class="dash-stat-val" id="stat-subjects-val">—</div>
+          <div class="dash-stat-lbl" data-i18n="dashboard.completed_subjects">Освоено предметов</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recent tests + notifications -->
+    <div class="grid-2 dash-panels">
+      <div>
+        <div class="section-title" data-i18n="dashboard.recent_attempts">Последние попытки</div>
+        <div id="student-history" class="analytics-shell"></div>
+      </div>
+      <div>
+        <div class="section-title" data-i18n="dashboard.notifications">Уведомления</div>
+        <div id="student-notifications" class="analytics-shell"></div>
+      </div>
+    </div>
+
+    <!-- TEACHER tools (collapsible) -->
+    <details class="dash-tools" id="section-teacher" style="display:none;">
+      <summary class="dash-tools-summary">Инструменты преподавателя</summary>
+
+      <div style="margin-top:16px;">
+        <div class="section-title">Добавить предмет</div>
+        <div class="row">
+          <div>
+            <label>Название предмета</label>
+            <input id="t-new-subject-name" placeholder="Например: Физика" />
+          </div>
+          <div>
+            <label>Описание (необязательно)</label>
+            <input id="t-new-subject-desc" placeholder="Краткое описание" />
+          </div>
+        </div>
+        <div style="height:8px;"></div>
+        <button class="btn btn-primary" id="btn-teacher-create-subject" type="button">Создать предмет</button>
+        <div style="height:8px;"></div>
+        <div class="log" id="teacher-create-subject-log">—</div>
+      </div>
+
+      <div class="grid-2" style="margin-top:16px;">
+        <div>
+          <div class="section-title">Создать тест (тема и вопросы)</div>
+          <div class="row">
+            <div>
+              <label>Предмет</label>
+              <select id="t-subject-id">
+                <option value="">— Загрузить предметы —</option>
+              </select>
+            </div>
+          </div>
+          <div class="row">
+            <div>
+              <label>Тема</label>
+              <input id="t-topic-name" placeholder="Например: Интегралы" />
+            </div>
+            <div>
+              <label>Сложность (1..5)</label>
+              <input id="t-topic-diff" type="number" placeholder="1" />
+            </div>
+          </div>
+          <div class="row">
+            <div>
+              <label>Вопрос</label>
+              <input id="t-question-text" placeholder="Текст вопроса" />
+            </div>
+          </div>
+          <label>Ответы (JSON)</label>
+          <textarea id="t-answers" spellcheck="false">[
+  {"answer_text":"Вариант 1","is_correct":true},
+  {"answer_text":"Вариант 2","is_correct":false}
+]</textarea>
+          <div style="height:10px;"></div>
+          <button class="btn btn-primary" id="btn-teacher-create-demo" type="button">Создать тему и вопрос</button>
+          <div style="height:8px;"></div>
+          <div class="log" id="teacher-create-log">—</div>
+
+          <div style="height:16px;"></div>
+          <div class="section-title">Назначить задание</div>
+          <div class="row">
+            <div>
+              <label>ID темы</label>
+              <input id="t-assign-topic-id" type="number" placeholder="1" />
+            </div>
+          </div>
+          <label>ID студентов (JSON массив)</label>
+          <textarea id="t-assign-users" spellcheck="false">[1]</textarea>
+          <div style="height:8px;"></div>
+          <button class="btn" id="btn-teacher-assign" type="button">Назначить</button>
+          <div style="height:8px;"></div>
+          <div class="log" id="teacher-assign-log">—</div>
+        </div>
+
+        <div>
+          <div class="section-title">Групповой отчёт</div>
+          <div class="row">
+            <div>
+              <label>Предмет</label>
+              <select id="t-report-subject-id">
+                <option value="">— Выберите предмет —</option>
+              </select>
+            </div>
+          </div>
+          <button class="btn btn-primary" id="btn-teacher-report" type="button">Показать отчёт</button>
+          <div style="height:8px;"></div>
+          <div class="log" id="teacher-report-log">—</div>
+
+          <div style="height:16px;"></div>
+          <div class="section-title">Внешний результат</div>
+          <div class="row">
+            <div>
+              <label>ID студента</label>
+              <input id="t-ext-user-id" type="number" placeholder="1" />
+            </div>
+            <div>
+              <label>ID предмета</label>
+              <input id="t-ext-subject-id" type="number" placeholder="1" />
+            </div>
+          </div>
+          <div class="row">
+            <div>
+              <label>Тип теста</label>
+              <select id="t-ext-type">
+                <option value="full">full</option>
+                <option value="quick">quick</option>
+              </select>
+            </div>
+            <div>
+              <label>Score (%)</label>
+              <input id="t-ext-score" type="number" placeholder="78" />
+            </div>
+          </div>
+          <button class="btn" id="btn-teacher-external" type="button">Добавить внешний результат</button>
+          <div style="height:8px;"></div>
+          <div class="log" id="teacher-external-log">—</div>
+        </div>
+      </div>
+    </details>
+
+    <!-- ADMIN tools (collapsible) -->
+    <details class="dash-tools" id="section-admin" style="display:none;">
+      <summary class="dash-tools-summary">Администрирование</summary>
+      <div class="grid-2" style="margin-top:16px;">
+        <div>
+          <div class="section-title">Пользователи</div>
+          <button class="btn btn-primary" id="btn-admin-users" type="button">Список пользователей</button>
+          <div style="height:8px;"></div>
+          <div class="log" id="admin-users-log">—</div>
+
+          <div style="height:14px;"></div>
+          <div class="section-title">Изменить пользователя</div>
+          <div class="row">
+            <div>
+              <label>User ID</label>
+              <input id="a-user-id" type="number" placeholder="1" />
+            </div>
+            <div>
+              <label>Роль</label>
+              <select id="a-user-role">
+                <option value="">(не менять)</option>
+                <option value="student">student</option>
+                <option value="teacher">teacher</option>
+                <option value="admin">admin</option>
+              </select>
+            </div>
+            <div>
+              <label>Активен</label>
+              <select id="a-user-active">
+                <option value="">(не менять)</option>
+                <option value="true">true</option>
+                <option value="false">false</option>
+              </select>
+            </div>
+          </div>
+          <button class="btn" id="btn-admin-user-update" type="button">Применить</button>
+          <div style="height:8px;"></div>
+          <div class="log" id="admin-user-update-log">—</div>
+        </div>
+
+        <div>
+          <div class="section-title">Вопросы</div>
+          <div class="row">
+            <div>
+              <label>Question ID</label>
+              <input id="a-q-id" type="number" placeholder="1" />
+            </div>
+          </div>
+          <div class="row">
+            <div>
+              <label>Новый текст</label>
+              <input id="a-q-text" placeholder="..." />
+            </div>
+          </div>
+          <div class="row" style="flex-wrap:wrap;">
+            <button class="btn" id="btn-admin-q-edit" type="button">Изменить</button>
+            <button class="btn btn-danger" id="btn-admin-q-del" type="button">Удалить</button>
+          </div>
+          <div style="height:8px;"></div>
+          <div class="log" id="admin-q-log">—</div>
+
+          <div style="height:14px;"></div>
+          <div class="section-title">Интеграции</div>
+          <div class="row" style="flex-wrap:wrap;">
+            <button class="btn btn-primary" id="btn-int-calendar" type="button">Синхронизация календаря</button>
+            <button class="btn" id="btn-int-notify" type="button">Отправить уведомления</button>
+          </div>
+          <div style="height:8px;"></div>
+          <div class="log" id="integrations-log">—</div>
+        </div>
+      </div>
+    </details>
+
+    <footer class="footer">
+      <div class="small muted">Поддержка: batamir5@gmail.com · +77777777777</div>
+      <div class="small muted">API: <a href="/docs" target="_blank" rel="noreferrer">/docs</a></div>
+    </footer>
+  </div>
+
+  <script src="/app/app.js?v=18"></script>
+  <script>
+    I18N.ru["dashboard.title"] = "Кабинет — Самоконтроль подготовки";
+    I18N.kz["dashboard.title"] = "Кабинет — Дайындықты өзін-өзі бақылау";
+    I18N.ru["dashboard.take_test"] = "Пройти тест";
+    I18N.kz["dashboard.take_test"] = "Тест тапсыру";
+    I18N.ru["dashboard.recent_attempts"] = "Последние попытки";
+    I18N.kz["dashboard.recent_attempts"] = "Соңғы талпыныстар";
+    I18N.ru["dashboard.schedule"] = "Расписание";
+    I18N.kz["dashboard.schedule"] = "Кесте";
+    I18N.ru["dashboard.notifications"] = "Уведомления";
+    I18N.kz["dashboard.notifications"] = "Хабарламалар";
+    I18N.ru["dashboard.personal_cabinet"] = "персональный кабинет";
+    I18N.kz["dashboard.personal_cabinet"] = "жеке кабинет";
+    I18N.ru["dashboard.profile_name_fallback"] = "Пользователь";
+    I18N.kz["dashboard.profile_name_fallback"] = "Пайдаланушы";
+    I18N.ru["dashboard.no_tests"] = "Пока нет завершённых тестов. Нажмите «Пройти тест».";
+    I18N.kz["dashboard.no_tests"] = "Әзірге аяқталған тесттер жоқ. «Тест тапсыру» түймесін басыңыз.";
+    I18N.ru["dashboard.total_tests"] = "Всего тестов";
+    I18N.kz["dashboard.total_tests"] = "Барлық тест";
+    I18N.ru["dashboard.average_score"] = "Средний балл";
+    I18N.kz["dashboard.average_score"] = "Орташа балл";
+    I18N.ru["dashboard.completed_subjects"] = "Освоено предметов";
+    I18N.kz["dashboard.completed_subjects"] = "Меңгерілген пәндер";
+    I18N.ru["dashboard.strong_subject"] = "Сильный предмет";
+    I18N.kz["dashboard.strong_subject"] = "Күшті пән";
+    I18N.ru["dashboard.weak_subject"] = "Слабый предмет";
+    I18N.kz["dashboard.weak_subject"] = "Әлсіз пән";
+    I18N.ru["dashboard.last_activity"] = "Последняя активность";
+    I18N.kz["dashboard.last_activity"] = "Соңғы белсенділік";
+    I18N.ru["dashboard.attempts_count"] = "{count} попыток";
+    I18N.kz["dashboard.attempts_count"] = "{count} талпыныс";
+    I18N.ru["dashboard.average_score_short"] = "Средний балл: {score}%";
+    I18N.kz["dashboard.average_score_short"] = "Орташа балл: {score}%";
+    I18N.ru["dashboard.type"] = "Тип";
+    I18N.kz["dashboard.type"] = "Түрі";
+    I18N.ru["dashboard.score"] = "Балл";
+    I18N.kz["dashboard.score"] = "Балл";
+    I18N.ru["dashboard.correct_answers"] = "Правильных";
+    I18N.kz["dashboard.correct_answers"] = "Дұрыс жауап";
+    I18N.ru["dashboard.level"] = "Уровень";
+    I18N.kz["dashboard.level"] = "Деңгей";
+    I18N.ru["dashboard.weak_topics"] = "Слабые темы";
+    I18N.kz["dashboard.weak_topics"] = "Әлсіз тақырыптар";
+    I18N.ru["dashboard.wrong_question_plan"] = "План по ошибкам";
+    I18N.kz["dashboard.wrong_question_plan"] = "Қателер бойынша жоспар";
+    I18N.ru["dashboard.no_wrong_questions"] = "Ошибок нет.";
+    I18N.kz["dashboard.no_wrong_questions"] = "Қате жоқ.";
+    I18N.ru["dashboard.open_answer_explanation"] = "Открыть разбор";
+    I18N.kz["dashboard.open_answer_explanation"] = "Түсіндірмені ашу";
+    I18N.ru["dashboard.select_subject_alert"] = "Выберите предмет";
+    I18N.kz["dashboard.select_subject_alert"] = "Пәнді таңдаңыз";
+    I18N.ru["dashboard.enter_subject_id"] = "Укажите ID предмета";
+    I18N.kz["dashboard.enter_subject_id"] = "Пән ID енгізіңіз";
+    I18N.ru["dashboard.enter_topic_id"] = "Укажите ID темы";
+    I18N.kz["dashboard.enter_topic_id"] = "Тақырып ID енгізіңіз";
+    I18N.ru["dashboard.fill_external"] = "Заполните user_id, subject_id и score";
+    I18N.kz["dashboard.fill_external"] = "user_id, subject_id және score толтырыңыз";
+    I18N.ru["dashboard.enter_question_update"] = "Укажите question_id и новый текст";
+    I18N.kz["dashboard.enter_question_update"] = "question_id және жаңа мәтінді енгізіңіз";
+    I18N.ru["dashboard.enter_user_id"] = "Укажите user_id";
+    I18N.kz["dashboard.enter_user_id"] = "user_id енгізіңіз";
+    I18N.ru["dashboard.enter_question_id"] = "Укажите question_id";
+    I18N.kz["dashboard.enter_question_id"] = "question_id енгізіңіз";
+    I18N.ru["dashboard.deleted"] = "Удалено";
+    I18N.kz["dashboard.deleted"] = "Өшірілді";
+
+    const payload = requireAuthOrRedirect();
+    if (!payload) { /* redirected */ }
+
+    $("btn-exit").onclick = () => {
+      Api.setToken(null);
+      window.location.href = "/app/";
+    };
+
+    // Show teacher/admin sections based on role
+    if (payload.role === "teacher" || payload.role === "admin") {
+      $("section-teacher").style.display = "";
+      loadTeacherSubjects();
+    }
+    if (payload.role === "admin") {
+      $("section-admin").style.display = "";
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/\"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+    }
+
+    function getScoreTone(score) {
+      const value = Number(score || 0);
+      if (value < 60) return "low";
+      if (value < 85) return "medium";
+      return "high";
+    }
+
+    function scoreToneClass(score, base) {
+      return `${base}-${getScoreTone(score)}`;
+    }
+
+    function setAnalyticsPlaceholder(id, text, isError = false) {
+      const el = $(id);
+      if (!el) return;
+      el.innerHTML = `<div class="analytics-empty${isError ? " error" : ""}">${escapeHtml(text)}</div>`;
+    }
+
+    function roleLabel(role) {
+      return translateRole(role);
+    }
+
+    function renderAccountProfile(user) {
+      const el = $("account-profile");
+      if (!el) return;
+      el.innerHTML = `
+        <div class="account-profile-head">
+          <div>
+            <div class="section-title">Профиль</div>
+            <div class="account-profile-name">${escapeHtml(user.full_name || t("dashboard.profile_name_fallback"))}</div>
+          </div>
+          <div class="analytics-level-pill">${escapeHtml(roleLabel(user.role))}</div>
+        </div>
+        <div class="account-profile-grid">
+          <div class="account-profile-item">
+            <div class="account-profile-label">${escapeHtml(t("common.email"))}</div>
+            <div class="account-profile-value">${escapeHtml(user.email || t("common.no_data"))}</div>
+          </div>
+          <div class="account-profile-item">
+            <div class="account-profile-label">${escapeHtml(t("common.role"))}</div>
+            <div class="account-profile-value">${escapeHtml(roleLabel(user.role))}</div>
+          </div>
+          <div class="account-profile-item">
+            <div class="account-profile-label">${escapeHtml(t("common.user_id"))}</div>
+            <div class="account-profile-value">${escapeHtml(user.id ?? t("common.no_data"))}</div>
+          </div>
+        </div>
+      `;
+    }
+
+    function updateStatCards(progress) {
+      if (!progress || !progress.total_tests) return;
+      const avgVal = $("stat-avg-val");
+      const levelVal = $("stat-level-val");
+      const subjectsVal = $("stat-subjects-val");
+      const statAvg = $("stat-avg");
+
+      $("stat-total").querySelector(".dash-stat-val").textContent = progress.total_tests || "0";
+
+      if (avgVal) {
+        avgVal.textContent = `${progress.average_score ?? "—"}%`;
+        avgVal.className = `dash-stat-val ${scoreToneClass(progress.average_score, "score-tone")}`;
+      }
+      if (statAvg) {
+        statAvg.className = `dash-stat-card glow-${getScoreTone(progress.average_score)}`;
+      }
+      if (levelVal) {
+        const score = progress.average_score ?? 0;
+        const level = score < 60 ? t("level.low") : score < 85 ? t("level.medium") : t("level.high");
+        levelVal.textContent = level;
+        levelVal.className = `dash-stat-val ${scoreToneClass(score, "score-tone")}`;
+      }
+      if (subjectsVal) {
+        subjectsVal.textContent = progress.completed_subjects ?? "—";
+      }
+    }
+
+    function formatTopicStats(items) {
+      if (!items || items.length === 0) return t("common.no_weak_topics");
+      return items.map(item => `${item.topic_name} (${item.mistakes})`).join(", ");
+    }
+
+    function renderStudentHistory(items) {
+      const el = $("student-history");
+      if (!el) return;
+      if (!items || items.length === 0) {
+        setAnalyticsPlaceholder("student-history", t("common.no_history_yet"));
+        return;
+      }
+
+      // Show last 5 tests flattened
+      const allTests = [];
+      items.forEach(item => {
+        const subjectName = item.subject_name || t("common.no_data");
+        (item.attempts || [item]).forEach(attempt => {
+          allTests.push({ ...attempt, subject_name: subjectName });
+        });
+      });
+
+      // Sort by date desc, take last 5
+      const sorted = allTests
+        .filter(a => a.created_at)
+        .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+        .slice(0, 5);
+
+      if (sorted.length === 0) {
+        // fallback: show subject cards
+        const bySubject = new Map();
+        items.forEach(item => {
+          const key = item.subject_name || t("common.no_data");
+          if (!bySubject.has(key)) bySubject.set(key, []);
+          bySubject.get(key).push(item);
+        });
+
+        el.innerHTML = `<div class="analytics-history-list">
+          ${Array.from(bySubject.entries()).slice(0, 4).map(([subjectName, list], idx) => {
+            const attempts = list.length;
+            const avgScore = Math.round(list.reduce((s, it) => s + (Number(it.score) || 0), 0) / (attempts || 1));
+            return `<div class="history-card glow-${getScoreTone(avgScore)}">
+              <div class="history-card-subject">${escapeHtml(translateSubjectName(subjectName))}</div>
+              <div class="history-card-meta">
+                <span class="${scoreToneClass(avgScore, "score-tone")}">${avgScore}%</span>
+                <span class="muted">${attempts} попыток</span>
+              </div>
+            </div>`;
+          }).join("")}
+        </div>`;
+        return;
+      }
+
+      el.innerHTML = `<div class="analytics-history-list">
+        ${sorted.map(item => {
+          const score = Number(item.score ?? 0);
+          const tone = getScoreTone(score);
+          return `<div class="history-card glow-${tone}">
+            <div class="history-card-subject">${escapeHtml(translateSubjectName(item.subject_name))}</div>
+            <div class="history-card-meta">
+              <span class="${scoreToneClass(score, "score-tone")}">${score}%</span>
+              <span class="muted small">${escapeHtml(translateTestType(item.test_type || ""))}</span>
+              <span class="muted small">${escapeHtml(formatDateTime(item.created_at))}</span>
+            </div>
+            <div class="analytics-progress-meter">
+              <div class="analytics-progress-meter-fill ${tone}" style="width:${Math.max(4,score)}%"></div>
+            </div>
+          </div>`;
+        }).join("")}
+        <a class="btn" href="/app/history.html" style="margin-top:8px; display:inline-flex;" data-i18n="nav.history">Вся история →</a>
+      </div>`;
+    }
+
+    async function loadCurrentUserProfile() {
+      try {
+        const user = await Api.request("/tests/profile", { auth: true });
+        renderAccountProfile(user);
+      } catch (e) {
+        if (e.message === "SESSION_EXPIRED") return;
+        const el = $("account-profile");
+        if (el) el.innerHTML = `<div class="analytics-empty error">${escapeHtml(e.message)}</div>`;
+      }
+    }
+
+    async function loadStudentProgress() {
+      try {
+        const progress = await Api.request("/tests/progress", { auth: true });
+        updateStatCards(progress);
+      } catch (e) {
+        if (e.message === "SESSION_EXPIRED") return;
+      }
+    }
+
+    async function loadStudentHistory() {
+      setAnalyticsPlaceholder("student-history", "Загрузка…");
+      try {
+        const history = await Api.request("/tests/history", { auth: true });
+        renderStudentHistory(history);
+      } catch (e) {
+        if (e.message === "SESSION_EXPIRED") return;
+        setAnalyticsPlaceholder("student-history", e.message, true);
+      }
+    }
+
+    async function loadNotifications() {
+      setAnalyticsPlaceholder("student-notifications", "Загрузка…");
+      try {
+        const notes = await Api.request("/schedule/notifications", { auth: true });
+        const el = $("student-notifications");
+        if (!notes || notes.length === 0) {
+          el.innerHTML = '<div class="analytics-empty">Уведомлений нет</div>';
+          return;
+        }
+        el.innerHTML = notes.slice(0, 5).map(n => `
+          <div class="notif-card${n.is_read ? " notif-read" : ""}">
+            <div class="notif-icon">${n.type === "reminder" ? "🔔" : "ℹ️"}</div>
+            <div class="notif-body">
+              <div>${escapeHtml(n.message)}</div>
+              <div class="muted small">${escapeHtml(formatDateTime(n.created_at))}${n.is_read ? " · прочитано" : ""}</div>
+            </div>
+          </div>`).join("");
+      } catch (e) {
+        if (e.message === "SESSION_EXPIRED") return;
+        setAnalyticsPlaceholder("student-notifications", e.message, true);
+      }
+    }
+
+    async function loadTeacherSubjects() {
+      const sel = $("t-subject-id");
+      if (!sel) return;
+      try {
+        const subjects = await Api.request("/subjects/", { auth: true });
+        sel.innerHTML = '<option value="">— Выберите предмет —</option>';
+        subjects.forEach(s => {
+          const opt = document.createElement("option");
+          opt.value = s.id;
+          opt.textContent = s.name;
+          sel.appendChild(opt);
+        });
+        const reportSel = $("t-report-subject-id");
+        if (reportSel) {
+          reportSel.innerHTML = '<option value="">— Выберите предмет —</option>';
+          subjects.forEach(s => {
+            const opt = document.createElement("option");
+            opt.value = s.id;
+            opt.textContent = s.name;
+            reportSel.appendChild(opt);
+          });
+        }
+      } catch (e) {
+        if (sel) sel.innerHTML = '<option value="">Ошибка загрузки</option>';
+      }
+    }
+
+    function formatTeacherReport(report) {
+      if (!report) return t("common.no_data");
+      const summary = report.summary || {};
+      const distribution = summary.score_distribution || {};
+      const weakTopics = (summary.weak_topics || []).map(topic => `${topic.topic_name} (${topic.mistakes})`).join(", ") || t("common.no_weak_topics");
+      const studentLines = (report.students || []).map((student, index) => {
+        return [
+          `${index + 1}. ${student.full_name}`,
+          `   ${t("dashboard.average_score")}: ${student.avg_score ?? t("common.no_data")}% | ${t("dashboard.total_tests")}: ${student.tests_count} | ${t("dashboard.level")}: ${translateLevel(student.level)}`,
+        ].join("\n");
+      }).join("\n\n");
+
+      return [
+        `${t("dashboard.total_tests")}: ${summary.tests_count ?? 0}`,
+        `${t("dashboard.average_score")}: ${summary.average_score ?? t("common.no_data")}%`,
+        `${t("dashboard.weak_topics")}: ${weakTopics}`,
+        `Low/Med/High: ${distribution["низкий"] ?? 0}/${distribution["средний"] ?? 0}/${distribution["высокий"] ?? 0}`,
+        "",
+        getLang() === "kz" ? "Студенттер:" : "Студенты:",
+        studentLines || t("common.no_data"),
+      ].join("\n");
+    }
+
+    // Auto-load everything
+    loadCurrentUserProfile();
+    loadStudentProgress();
+    loadStudentHistory();
+    loadNotifications();
+
+    // TEACHER actions
+    $("btn-teacher-create-subject")?.addEventListener("click", async () => {
+      try {
+        const name = $("t-new-subject-name").value.trim();
+        const description = $("t-new-subject-desc").value.trim() || null;
+        if (!name) { alert("Введите название предмета"); return; }
+        const res = await Api.request("/subjects/", { method: "POST", auth: true, body: { name, description } });
+        renderJson("teacher-create-subject-log", res);
+        $("t-new-subject-name").value = "";
+        $("t-new-subject-desc").value = "";
+        await loadTeacherSubjects();
+      } catch (e) {
+        renderJson("teacher-create-subject-log", e.message, true);
+      }
+    });
+
+    $("btn-teacher-create-demo")?.addEventListener("click", async () => {
+      try {
+        const subjectId = parseInt($("t-subject-id").value, 10);
+        if (!subjectId) { alert(t("dashboard.select_subject_alert")); return; }
+        const topicName = $("t-topic-name").value.trim() || "Новая тема";
+        const diff = parseInt($("t-topic-diff").value, 10) || 1;
+        const qText = $("t-question-text").value.trim() || "Демо вопрос";
+        let answers = JSON.parse($("t-answers").value || "[]");
+        const topic = await Api.request("/subjects/topics", { method: "POST", auth: true, body: { subject_id: subjectId, name: topicName, difficulty_level: diff } });
+        const question = await Api.request("/subjects/questions", { method: "POST", auth: true, body: { topic_id: topic.id, question_text: qText, question_type: "single", answers } });
+        renderJson("teacher-create-log", { topic, question });
+      } catch (e) {
+        renderJson("teacher-create-log", e.message, true);
+      }
+    });
+
+    $("btn-teacher-report")?.addEventListener("click", async () => {
+      try {
+        const sid = parseInt($("t-report-subject-id").value, 10);
+        if (!sid) { alert(t("dashboard.enter_subject_id")); return; }
+        const report = await Api.request(`/teacher/subjects/${sid}/report`, { auth: true });
+        renderJson("teacher-report-log", formatTeacherReport(report));
+      } catch (e) {
+        renderJson("teacher-report-log", e.message, true);
+      }
+    });
+
+    $("btn-teacher-assign")?.addEventListener("click", async () => {
+      try {
+        const tid = parseInt($("t-assign-topic-id").value, 10);
+        if (!tid) { alert(t("dashboard.enter_topic_id")); return; }
+        const users = JSON.parse($("t-assign-users").value || "[]");
+        const res = await Api.request(`/teacher/assignments?topic_id=${encodeURIComponent(tid)}`, { method: "POST", auth: true, body: users });
+        renderJson("teacher-assign-log", res);
+      } catch (e) {
+        renderJson("teacher-assign-log", e.message, true);
+      }
+    });
+
+    $("btn-teacher-external")?.addEventListener("click", async () => {
+      try {
+        const uid = parseInt($("t-ext-user-id").value, 10);
+        const sid = parseInt($("t-ext-subject-id").value, 10);
+        const score = parseFloat($("t-ext-score").value);
+        const ttype = $("t-ext-type").value;
+        if (!uid || !sid || isNaN(score)) { alert(t("dashboard.fill_external")); return; }
+        const res = await Api.request(`/teacher/external-results?user_id=${uid}&subject_id=${sid}&score=${encodeURIComponent(score)}&test_type=${encodeURIComponent(ttype)}`, { method: "POST", auth: true });
+        renderJson("teacher-external-log", res);
+      } catch (e) {
+        renderJson("teacher-external-log", e.message, true);
+      }
+    });
+
+    // ADMIN actions
+    $("btn-admin-users")?.addEventListener("click", async () => {
+      try {
+        const users = await Api.request("/admin/users", { auth: true });
+        renderJson("admin-users-log", users);
+      } catch (e) {
+        renderJson("admin-users-log", e.message, true);
+      }
+    });
+
+    $("btn-admin-user-update")?.addEventListener("click", async () => {
+      try {
+        const id = parseInt($("a-user-id").value, 10);
+        if (!id) { alert(t("dashboard.enter_user_id")); return; }
+        const role = $("a-user-role").value;
+        const activeRaw = $("a-user-active").value;
+        const params = new URLSearchParams();
+        if (role) params.append("role", role);
+        if (activeRaw) params.append("active", activeRaw);
+        const res = await Api.request(`/admin/users/${id}?${params.toString()}`, { method: "PATCH", auth: true });
+        renderJson("admin-user-update-log", res);
+      } catch (e) {
+        renderJson("admin-user-update-log", e.message, true);
+      }
+    });
+
+    $("btn-admin-q-edit")?.addEventListener("click", async () => {
+      try {
+        const id = parseInt($("a-q-id").value, 10);
+        const text = $("a-q-text").value.trim();
+        if (!id || !text) { alert(t("dashboard.enter_question_update")); return; }
+        const res = await Api.request(`/admin/questions/${id}?text=${encodeURIComponent(text)}`, { method: "PATCH", auth: true });
+        renderJson("admin-q-log", res);
+      } catch (e) {
+        renderJson("admin-q-log", e.message, true);
+      }
+    });
+
+    $("btn-admin-q-del")?.addEventListener("click", async () => {
+      try {
+        const id = parseInt($("a-q-id").value, 10);
+        if (!id) { alert(t("dashboard.enter_question_id")); return; }
+        const res = await Api.request(`/admin/questions/${id}`, { method: "DELETE", auth: true });
+        renderJson("admin-q-log", t("dashboard.deleted") + ": " + JSON.stringify(res));
+      } catch (e) {
+        renderJson("admin-q-log", e.message, true);
+      }
+    });
+
+    $("btn-int-calendar")?.addEventListener("click", async () => {
+      try {
+        const res = await Api.request("/integrations/calendar/sync", { method: "POST", auth: true });
+        renderJson("integrations-log", res);
+      } catch (e) {
+        renderJson("integrations-log", e.message, true);
+      }
+    });
+
+    $("btn-int-notify")?.addEventListener("click", async () => {
+      try {
+        const res = await Api.request("/integrations/notify", { method: "POST", auth: true });
+        renderJson("integrations-log", res);
+      } catch (e) {
+        renderJson("integrations-log", e.message, true);
+      }
+    });
+
+    applyI18n(document);
+  </script>
+</body>
+</html>

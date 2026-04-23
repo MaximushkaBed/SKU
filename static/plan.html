@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <title data-i18n-title="plan.title">План на неделю — Самоконтроль подготовки</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="/app/app.css?v=18" />
+</head>
+<body>
+  <div class="page">
+    <header class="header site-header site-header-main">
+      <div class="site-header-main-inner">
+        <div class="site-header-main-left">
+          <a class="btn" href="/app/dashboard.html" data-i18n="nav.dashboard">Кабинет</a>
+        </div>
+        <div class="site-header-main-right">
+          <a class="btn" href="/app/test.html" data-i18n="nav.test">Пройти тест</a>
+          <a class="btn" href="/app/history.html" data-i18n="nav.history">История</a>
+          <a class="btn btn-primary" href="/app/plan.html" data-i18n="nav.plan">План</a>
+          <a class="btn" href="/app/analytics.html" data-i18n="nav.analytics">Аналитика</a>
+          <button class="btn btn-danger" id="btn-exit" type="button" data-i18n="nav.logout">Выйти</button>
+        </div>
+      </div>
+    </header>
+
+    <div class="analytics-page-hero">
+      <div>
+        <div class="section-title" data-i18n="plan.header">План на неделю</div>
+        <div class="muted" data-i18n="plan.subtitle">Персональный учебный план на ближайшие дни.</div>
+      </div>
+      <button class="btn" id="btn-refresh-plan" type="button" data-i18n="common.refresh">Обновить</button>
+    </div>
+
+    <div class="analytics-page-section-title" data-i18n="plan.study_plan">Учебный план</div>
+    <div id="analytics-study-plan" class="analytics-shell"></div>
+  </div>
+
+  <script src="/app/app.js?v=18"></script>
+  <script>
+    I18N.ru["plan.title"] = "План на неделю — Самоконтроль подготовки";
+    I18N.kz["plan.title"] = "Апталық жоспар — Дайындықты өзін-өзі бақылау";
+    I18N.ru["plan.header"] = "План на неделю";
+    I18N.kz["plan.header"] = "Апталық жоспар";
+    I18N.ru["plan.subtitle"] = "Персональный учебный план на ближайшие дни.";
+    I18N.kz["plan.subtitle"] = "Алдағы күндерге арналған жеке оқу жоспары.";
+    I18N.ru["plan.study_plan"] = "Учебный план";
+    I18N.kz["plan.study_plan"] = "Оқу жоспары";
+    I18N.ru["plan.no_data"] = "Недельный план появится после накопления данных о прогрессе.";
+    I18N.kz["plan.no_data"] = "Апталық жоспар прогресс туралы деректер жиналғаннан кейін пайда болады.";
+    I18N.ru["plan.days_count"] = "План на {days} дней";
+    I18N.kz["plan.days_count"] = "{days} күнге жоспар";
+    I18N.ru["plan.type"] = "Тип";
+    I18N.kz["plan.type"] = "Түрі";
+    I18N.ru["plan.duration"] = "Длительность";
+    I18N.kz["plan.duration"] = "Ұзақтығы";
+    I18N.ru["plan.subject"] = "Предмет";
+    I18N.kz["plan.subject"] = "Пән";
+    I18N.ru["plan.topic"] = "Тема";
+    I18N.kz["plan.topic"] = "Тақырып";
+    I18N.ru["plan.minutes"] = "мин";
+    I18N.kz["plan.minutes"] = "мин";
+
+    const payload = requireAuthOrRedirect();
+    if (!payload) { /* redirected */ }
+
+    function $(id) { return document.getElementById(id); }
+
+    function escapeHtml(value) {
+      return String(value ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/\"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+    }
+
+    function setPlaceholder(id, text, isError = false) {
+      const el = $(id);
+      if (!el) return;
+      el.innerHTML = `<div class="analytics-empty${isError ? " error" : ""}">${escapeHtml(text)}</div>`;
+    }
+
+    function planTypePill(type) {
+      const cls = { review: "review", theory: "theory", practice: "practice", test: "test", reflection: "reflection" };
+      const label = translatePlanItemType(type);
+      return `<span class="plan-type-pill ${cls[type] || ""}">${escapeHtml(label)}</span>`;
+    }
+
+    function priorityDot(priority) {
+      return `<span class="plan-priority-dot ${priority}"></span>`;
+    }
+
+    function renderStudyPlan(plan) {
+      const el = $("analytics-study-plan");
+      if (!plan || !plan.items || plan.items.length === 0) {
+        setPlaceholder("analytics-study-plan", t("plan.no_data"));
+        return;
+      }
+
+      // Group items by day_label
+      const byDay = {};
+      const dayOrder = [];
+      for (const item of plan.items) {
+        if (!byDay[item.day_label]) { byDay[item.day_label] = []; dayOrder.push(item.day_label); }
+        byDay[item.day_label].push(item);
+      }
+
+      const overviewHtml = `
+        <div class="analytics-page-card" style="margin-bottom:16px;">
+          <div class="analytics-page-card-head">
+            <div class="analytics-page-card-title">${escapeHtml(t("plan.days_count", { days: plan.horizon_days }))}</div>
+          </div>
+          <div class="analytics-page-card-text" style="margin-top:4px;">${escapeHtml(plan.overview)}</div>
+        </div>`;
+
+      const gridHtml = `
+        <div class="plan-week-grid">
+          ${dayOrder.map((day, idx) => `
+            <div class="plan-day-card">
+              <div class="plan-day-num">${idx + 1}</div>
+              <div class="plan-day-title">${escapeHtml(day)}</div>
+              ${byDay[day].map(item => `
+                <div style="margin-top:10px; padding-top:10px; border-top:1px solid var(--border-color);">
+                  <div style="font-weight:600; margin-bottom:4px;">${escapeHtml(item.title)}</div>
+                  <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap; margin-bottom:6px;">
+                    ${planTypePill(item.item_type)}
+                    ${priorityDot(item.priority)}
+                    <span class="muted small">${escapeHtml(item.duration_minutes)} мин</span>
+                  </div>
+                  ${item.focus_subject ? `<div class="muted small">Предмет: ${escapeHtml(translateSubjectName(item.focus_subject))}</div>` : ""}
+                  ${item.topic_name ? `<div class="muted small">Тема: ${escapeHtml(item.topic_name)}</div>` : ""}
+                </div>
+              `).join("")}
+            </div>
+          `).join("")}
+        </div>`;
+
+      el.innerHTML = overviewHtml + gridHtml;
+    }
+
+    async function loadPlan() {
+      try {
+        const plan = await Api.request("/tests/study-plan", { auth: true });
+        renderStudyPlan(plan);
+      } catch (e) {
+        if (e.message === "SESSION_EXPIRED") return;
+        setPlaceholder("analytics-study-plan", e.message, true);
+      }
+    }
+
+    $("btn-refresh-plan").addEventListener("click", loadPlan);
+    $("btn-exit").onclick = () => { Api.setToken(null); window.location.href = "/app/"; };
+    applyI18n(document);
+    loadPlan();
+  </script>
+</body>
+</html>
+

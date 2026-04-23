@@ -1,0 +1,977 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <title data-i18n-title="analytics.title">Аналитика — Самоконтроль подготовки</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="/app/app.css?v=18" />
+</head>
+<body>
+  <div class="page">
+    <header class="header site-header site-header-main">
+      <div class="site-header-main-inner">
+        <div class="site-header-main-left">
+          <a class="btn" href="/app/dashboard.html" data-i18n="nav.dashboard">Кабинет</a>
+        </div>
+        <div class="site-header-main-right">
+          <a class="btn" href="/app/test.html" data-i18n="nav.test">Пройти тест</a>
+          <a class="btn" href="/app/history.html" data-i18n="nav.history">История</a>
+          <a class="btn" href="/app/plan.html" data-i18n="nav.plan">План</a>
+          <a class="btn btn-primary" href="/app/analytics.html" data-i18n="nav.analytics">Аналитика</a>
+          <button class="btn btn-danger" id="btn-exit" type="button" data-i18n="nav.logout">Выйти</button>
+        </div>
+      </div>
+    </header>
+
+    <div class="analytics-page-hero">
+      <div>
+        <div class="section-title" data-i18n="analytics.personal">Персональная аналитика</div>
+        <div class="muted" data-i18n="analytics.subtitle">История тестов, прогресс по предметам и текущие рекомендации.</div>
+      </div>
+      <button class="btn" id="btn-refresh-analytics" type="button" data-i18n="common.refresh">Обновить</button>
+    </div>
+
+    <!-- Вкладки -->
+    <div class="tabs" id="analytics-tabs" style="margin-top:8px;">
+      <button class="tab active" data-tab="progress">Прогресс</button>
+      <button class="tab" data-tab="ml">Интеллектуальный модуль</button>
+      <button class="tab" data-tab="ai">AI-ассистент</button>
+    </div>
+
+    <!-- Вкладка 1: Прогресс -->
+    <div id="tab-progress" class="panel active">
+      <div class="analytics-page-section-title" style="margin-top:20px;" data-i18n="analytics.charts">Графики</div>
+      <div id="analytics-charts" class="analytics-charts-grid"></div>
+
+      <div class="analytics-page-section-title" style="margin-top:24px;" data-i18n="analytics.overall_progress">Общий прогресс</div>
+      <div id="analytics-progress" class="analytics-shell"></div>
+    </div>
+
+    <!-- Вкладка 2: ML-модуль -->
+    <div id="tab-ml" class="panel">
+      <div class="analytics-page-grid" style="margin-top:20px;">
+        <div>
+          <div class="analytics-page-section-title">Кластеризация</div>
+          <div id="analytics-cluster" class="analytics-shell"></div>
+        </div>
+        <div>
+          <div class="analytics-page-section-title">ML-рекомендации</div>
+          <div id="analytics-ml-recs" class="analytics-shell"></div>
+        </div>
+      </div>
+
+      <div class="analytics-page-section-title" style="margin-top:24px;" data-i18n="analytics.study_vector">Персональный учебный план</div>
+      <div id="analytics-recommendations" class="analytics-shell"></div>
+    </div>
+
+    <!-- Вкладка 3: AI-ассистент -->
+    <div id="tab-ai" class="panel">
+      <div style="margin-top:20px;">
+        <div class="analytics-page-card">
+          <div id="ai-chat-log" class="analytics-page-list" style="max-height: 340px; overflow-y: auto; margin-bottom: 12px;"></div>
+          <div style="display:flex; gap:8px;">
+            <input id="ai-chat-input" class="input" style="flex:1;" placeholder="Например: В каком я кластере?" />
+            <button class="btn btn-primary" id="btn-ai-send" type="button">Спросить</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/app/app.js?v=18"></script>
+  <script>
+    I18N.ru["analytics.title"] = "Аналитика — Самоконтроль подготовки";
+    I18N.kz["analytics.title"] = "Талдау — Дайындықты өзін-өзі бақылау";
+    I18N.ru["analytics.personal"] = "Персональная аналитика";
+    I18N.kz["analytics.personal"] = "Жеке талдау";
+    I18N.ru["analytics.subtitle"] = "История тестов, прогресс по предметам и текущие рекомендации.";
+    I18N.kz["analytics.subtitle"] = "Тест тарихы, пәндер бойынша прогресс және ағымдағы ұсыныстар.";
+    I18N.ru["analytics.charts"] = "Графики";
+    I18N.kz["analytics.charts"] = "Графиктер";
+    I18N.ru["analytics.overall_progress"] = "Общий прогресс";
+    I18N.kz["analytics.overall_progress"] = "Жалпы прогресс";
+    I18N.ru["analytics.study_vector"] = "Персональный учебный план";
+    I18N.kz["analytics.study_vector"] = "Жеке оқу жоспары";
+    I18N.ru["analytics.personal_sub"] = "персональная аналитика";
+    I18N.kz["analytics.personal_sub"] = "жеке талдау";
+    I18N.ru["analytics.no_weak_topics"] = "Нет выраженных слабых тем";
+    I18N.kz["analytics.no_weak_topics"] = "Айқын әлсіз тақырыптар жоқ";
+    I18N.ru["analytics.no_chart_history"] = "Недостаточно данных для графика динамики.";
+    I18N.kz["analytics.no_chart_history"] = "Динамика графигіне дерек жеткіліксіз.";
+    I18N.ru["analytics.no_chart_subjects"] = "Недостаточно данных для графика по предметам.";
+    I18N.kz["analytics.no_chart_subjects"] = "Пәндер графигіне дерек жеткіліксіз.";
+    I18N.ru["analytics.no_chart_radar"] = "Лепестковый профиль появится, когда будет достаточно предметов для сравнения.";
+    I18N.kz["analytics.no_chart_radar"] = "Салыстыруға жеткілікті пән болғанда радарлық профиль пайда болады.";
+    I18N.ru["analytics.line_aria"] = "График динамики результатов";
+    I18N.kz["analytics.line_aria"] = "Нәтижелер динамикасының графигі";
+    I18N.ru["analytics.line_caption"] = "Показывает результаты последних попыток. Подписи 1–8 идут от более ранней попытки к новой.";
+    I18N.kz["analytics.line_caption"] = "Соңғы талпыныстар нәтижелерін көрсетеді. 1–8 белгілері ертеректен жаңасына дейін орналасқан.";
+    I18N.ru["analytics.bar_aria"] = "График среднего балла по предметам";
+    I18N.kz["analytics.bar_aria"] = "Пәндер бойынша орташа балл графигі";
+    I18N.ru["analytics.bar_caption"] = "Сравнение среднего результата по предметам. Чем длиннее полоса, тем сильнее предмет.";
+    I18N.kz["analytics.bar_caption"] = "Пәндер бойынша орташа нәтижені салыстыру. Жолақ неғұрлым ұзын болса, пән соғұрлым күшті.";
+    I18N.ru["analytics.radar_aria"] = "Лепестковый профиль по предметам";
+    I18N.kz["analytics.radar_aria"] = "Пәндер бойынша радарлық профиль";
+    I18N.ru["analytics.finish_test_first"] = "Сначала завершите хотя бы один тест, чтобы увидеть графики.";
+    I18N.kz["analytics.finish_test_first"] = "Графиктерді көру үшін алдымен кемінде бір тестті аяқтаңыз.";
+    I18N.ru["analytics.results_dynamics"] = "Динамика результатов";
+    I18N.kz["analytics.results_dynamics"] = "Нәтижелер динамикасы";
+    I18N.ru["analytics.avg_subjects"] = "Средний балл по предметам";
+    I18N.kz["analytics.avg_subjects"] = "Пәндер бойынша орташа балл";
+    I18N.ru["analytics.profile_preparation"] = "Профиль подготовки";
+    I18N.kz["analytics.profile_preparation"] = "Дайындық профилі";
+    I18N.ru["analytics.no_progress"] = "Пока нет завершённых тестов. После первого теста здесь появится аналитика.";
+    I18N.kz["analytics.no_progress"] = "Әзірге аяқталған тесттер жоқ. Алғашқы тесттен кейін мұнда талдау пайда болады.";
+    I18N.ru["analytics.total_tests"] = "Всего тестов";
+    I18N.kz["analytics.total_tests"] = "Барлық тест";
+    I18N.ru["analytics.average_score"] = "Средний балл";
+    I18N.kz["analytics.average_score"] = "Орташа балл";
+    I18N.ru["analytics.completed_subjects"] = "Освоено предметов";
+    I18N.kz["analytics.completed_subjects"] = "Меңгерілген пәндер";
+    I18N.ru["analytics.strong_subject"] = "Сильный предмет";
+    I18N.kz["analytics.strong_subject"] = "Күшті пән";
+    I18N.ru["analytics.weak_subject"] = "Слабый предмет";
+    I18N.kz["analytics.weak_subject"] = "Әлсіз пән";
+    I18N.ru["analytics.last_activity"] = "Последняя активность";
+    I18N.kz["analytics.last_activity"] = "Соңғы белсенділік";
+    I18N.ru["analytics.subjects"] = "Предметы";
+    I18N.kz["analytics.subjects"] = "Пәндер";
+    I18N.ru["analytics.subject_avg"] = "Средний балл";
+    I18N.kz["analytics.subject_avg"] = "Орташа балл";
+    I18N.ru["analytics.subject_latest"] = "Последний тест";
+    I18N.kz["analytics.subject_latest"] = "Соңғы тест";
+    I18N.ru["analytics.subject_best"] = "Лучший результат";
+    I18N.kz["analytics.subject_best"] = "Ең жақсы нәтиже";
+    I18N.ru["analytics.subject_total"] = "Количество тестов";
+    I18N.kz["analytics.subject_total"] = "Тест саны";
+    I18N.ru["analytics.weak_topics"] = "Слабые темы";
+    I18N.kz["analytics.weak_topics"] = "Әлсіз тақырыптар";
+    I18N.ru["analytics.no_recommendations"] = "Рекомендации появятся после первого завершённого теста.";
+    I18N.kz["analytics.no_recommendations"] = "Ұсыныстар алғашқы аяқталған тесттен кейін пайда болады.";
+    I18N.ru["analytics.current_vector"] = "Текущий вектор подготовки";
+    I18N.kz["analytics.current_vector"] = "Ағымдағы дайындық бағыты";
+    I18N.ru["analytics.trend"] = "Тренд";
+    I18N.kz["analytics.trend"] = "Тренд";
+    I18N.ru["analytics.focus"] = "Фокус";
+    I18N.kz["analytics.focus"] = "Фокус";
+    I18N.ru["analytics.next_test"] = "Следующий тест";
+    I18N.kz["analytics.next_test"] = "Келесі тест";
+    I18N.ru["analytics.priority_topics"] = "Приоритетные темы";
+    I18N.kz["analytics.priority_topics"] = "Басым тақырыптар";
+    I18N.ru["analytics.action_plan"] = "План действий";
+    I18N.kz["analytics.action_plan"] = "Әрекет жоспары";
+    I18N.ru["analytics.resources"] = "Что почитать и где учить";
+    I18N.kz["analytics.resources"] = "Не оқу керек және қайдан үйрену керек";
+    I18N.ru["analytics.open_material"] = "Открыть материал";
+    I18N.kz["analytics.open_material"] = "Материалды ашу";
+    I18N.ru["analytics.no_resources"] = "Пока нет подобранных материалов.";
+    I18N.kz["analytics.no_resources"] = "Әзірге таңдалған материалдар жоқ.";
+    I18N.ru["analytics.avg_readiness"] = "Средняя готовность";
+    I18N.kz["analytics.avg_readiness"] = "Орташа дайындық";
+    I18N.ru["analytics.score_traffic"] = "Светофор результатов";
+    I18N.kz["analytics.score_traffic"] = "Нәтиже светофоры";
+    I18N.ru["analytics.recent_tests"] = "Последние тесты";
+    I18N.kz["analytics.recent_tests"] = "Соңғы тесттер";
+    I18N.ru["analytics.attempt_label"] = "Попытка {index}";
+    I18N.kz["analytics.attempt_label"] = "{index}-талпыныс";
+    I18N.ru["analytics.subject_short"] = "Предмет";
+    I18N.kz["analytics.subject_short"] = "Пән";
+    I18N.ru["analytics.low_risk"] = "Зона риска";
+    I18N.kz["analytics.low_risk"] = "Қауіп аймағы";
+    I18N.ru["analytics.medium_risk"] = "Нужно подтянуть";
+    I18N.kz["analytics.medium_risk"] = "Күшейту керек";
+    I18N.ru["analytics.high_risk"] = "Отличный результат";
+    I18N.kz["analytics.high_risk"] = "Өте жақсы нәтиже";
+
+    const payload = requireAuthOrRedirect();
+    if (!payload) { /* redirected */ }
+
+    function $(id) { return document.getElementById(id); }
+
+    function escapeHtml(value) {
+      return String(value ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/\"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+    }
+
+    function formatTopicStats(items) {
+      if (!items || items.length === 0) return t("analytics.no_weak_topics");
+      return items.map(item => `${item.topic_name} (${item.mistakes})`).join(", ");
+    }
+
+    function setPlaceholder(id, text, isError = false) {
+      const el = $(id);
+      if (!el) return;
+      el.innerHTML = `<div class="analytics-empty${isError ? " error" : ""}">${escapeHtml(text)}</div>`;
+    }
+
+    function setWhoAmI() {
+      const el = $("analytics-whoami");
+      if (el) el.textContent = t("analytics.personal_sub");
+    }
+
+    function shortSubjectName(name, maxLength = 18) {
+      if (!name) return "—";
+      return name.length > maxLength ? name.slice(0, maxLength - 1) + "…" : name;
+    }
+
+    function getScoreTone(score) {
+      const value = Number(score || 0);
+      if (value < 60) return "low";
+      if (value < 85) return "medium";
+      return "high";
+    }
+
+    function scoreToneClass(score, base) {
+      return `${base}-${getScoreTone(score)}`;
+    }
+
+    function toneDescription(score) {
+      const tone = getScoreTone(score);
+      if (tone === "low") return t("analytics.low_risk");
+      if (tone === "medium") return t("analytics.medium_risk");
+      return t("analytics.high_risk");
+    }
+
+    function renderLineChart(history) {
+      if (!history || history.length === 0) {
+        return `<div class="analytics-empty">${escapeHtml(t("analytics.no_chart_history"))}</div>`;
+      }
+
+      const items = history.slice(0, 8).reverse();
+      const width = 620;
+      const height = 260;
+      const padding = { top: 18, right: 18, bottom: 36, left: 40 };
+      const innerWidth = width - padding.left - padding.right;
+      const innerHeight = height - padding.top - padding.bottom;
+      const levels = [0, 25, 50, 75, 100];
+
+      const points = items.map((item, index) => {
+        const x = padding.left + (items.length === 1 ? innerWidth / 2 : (index * innerWidth) / (items.length - 1));
+        const y = padding.top + innerHeight - (Number(item.score || 0) / 100) * innerHeight;
+        return { x, y, item };
+      });
+
+      const polyline = points.map(point => `${point.x},${point.y}`).join(" ");
+      const grid = levels.map(level => {
+        const y = padding.top + innerHeight - (level / 100) * innerHeight;
+        return `
+          <line x1="${padding.left}" y1="${y}" x2="${width - padding.right}" y2="${y}" class="chart-grid-line"></line>
+          <text x="${padding.left - 8}" y="${y + 4}" text-anchor="end" class="chart-axis-text">${level}</text>
+        `;
+      }).join("");
+
+      const labels = points.map((point, index) => `
+        <text x="${point.x}" y="${height - 10}" text-anchor="middle" class="chart-axis-text">${index + 1}</text>
+      `).join("");
+
+      const dots = points.map(point => `
+        <circle cx="${point.x}" cy="${point.y}" r="5" class="${scoreToneClass(point.item.score, "chart-point")}"></circle>
+        <title>${point.item.subject_name}: ${point.item.score}%</title>
+      `).join("");
+
+      return `
+        <svg viewBox="0 0 ${width} ${height}" class="analytics-chart-svg" role="img" aria-label="${escapeHtml(t("analytics.line_aria"))}">
+          ${grid}
+          <polyline points="${polyline}" class="chart-line"></polyline>
+          ${dots}
+          ${labels}
+        </svg>
+        <div class="analytics-chart-caption">${escapeHtml(t("analytics.line_caption"))}</div>
+      `;
+    }
+
+    function renderBarChart(subjects) {
+      if (!subjects || subjects.length === 0) {
+        return `<div class="analytics-empty">${escapeHtml(t("analytics.no_chart_subjects"))}</div>`;
+      }
+
+      const items = subjects.slice(0, 8);
+      const width = 620;
+      const rowHeight = 34;
+      const gap = 14;
+      const padding = { top: 16, right: 24, bottom: 12, left: 150 };
+      const height = padding.top + padding.bottom + items.length * rowHeight + (items.length - 1) * gap;
+      const maxBarWidth = width - padding.left - padding.right;
+
+      const bars = items.map((subject, index) => {
+        const y = padding.top + index * (rowHeight + gap);
+        const barWidth = Math.max(8, (Number(subject.average_score || 0) / 100) * maxBarWidth);
+        return `
+          <text x="${padding.left - 12}" y="${y + 21}" text-anchor="end" class="chart-axis-text">${escapeHtml(shortSubjectName(translateSubjectName(subject.subject_name), 20))}</text>
+          <rect x="${padding.left}" y="${y}" width="${maxBarWidth}" height="${rowHeight}" rx="10" class="chart-bar-track"></rect>
+          <rect x="${padding.left}" y="${y}" width="${barWidth}" height="${rowHeight}" rx="10" class="${scoreToneClass(subject.average_score, "chart-bar-fill")}"></rect>
+          <text x="${padding.left + Math.min(barWidth + 10, maxBarWidth - 8)}" y="${y + 21}" class="chart-value-text">${escapeHtml(subject.average_score)}%</text>
+        `;
+      }).join("");
+
+      return `
+        <svg viewBox="0 0 ${width} ${height}" class="analytics-chart-svg" role="img" aria-label="${escapeHtml(t("analytics.bar_aria"))}">
+          ${bars}
+        </svg>
+        <div class="analytics-chart-caption">${escapeHtml(t("analytics.bar_caption"))}</div>
+      `;
+    }
+
+    function renderRadarChart(subjects) {
+      if (!subjects || subjects.length < 3) {
+        return `<div class="analytics-empty">${escapeHtml(t("analytics.no_chart_radar"))}</div>`;
+      }
+
+      const items = subjects.slice(0, 8);
+      const size = 360;
+      const center = size / 2;
+      const radius = 110;
+      const levels = [25, 50, 75, 100];
+      const angleStep = (Math.PI * 2) / items.length;
+
+      function pointFor(value, index, extraRadius = 0) {
+        const angle = -Math.PI / 2 + index * angleStep;
+        const localRadius = (value / 100) * radius + extraRadius;
+        return {
+          x: center + Math.cos(angle) * localRadius,
+          y: center + Math.sin(angle) * localRadius,
+        };
+      }
+
+      const grid = levels.map(level => {
+        const polygon = items.map((_, index) => {
+          const point = pointFor(level, index);
+          return `${point.x},${point.y}`;
+        }).join(" ");
+        return `<polygon points="${polygon}" class="chart-radar-grid"></polygon>`;
+      }).join("");
+
+      const axes = items.map((subject, index) => {
+        const end = pointFor(100, index);
+        const labelPoint = pointFor(100, index, 22);
+        return `
+          <line x1="${center}" y1="${center}" x2="${end.x}" y2="${end.y}" class="chart-radar-axis"></line>
+          <text x="${labelPoint.x}" y="${labelPoint.y}" text-anchor="middle" class="chart-axis-text">${index + 1}</text>
+        `;
+      }).join("");
+
+      const dataPolygon = items.map((subject, index) => {
+        const point = pointFor(Number(subject.average_score || 0), index);
+        return `${point.x},${point.y}`;
+      }).join(" ");
+
+      return `
+        <svg viewBox="0 0 ${size} ${size}" class="analytics-chart-svg analytics-chart-svg-radar" role="img" aria-label="${escapeHtml(t("analytics.radar_aria"))}">
+          ${grid}
+          ${axes}
+          <polygon points="${dataPolygon}" class="chart-radar-fill"></polygon>
+          <polyline points="${dataPolygon}" class="chart-radar-line"></polyline>
+        </svg>
+        <div class="analytics-chart-legend">
+          ${items.map((subject, index) => `<span><strong>${index + 1}</strong> — ${escapeHtml(translateSubjectName(subject.subject_name))}</span>`).join("")}
+        </div>
+      `;
+    }
+
+    function renderGauge(score) {
+      const safeScore = Math.max(0, Math.min(100, Number(score || 0)));
+      const R = 80, cx = 110, cy = 110;
+      const circ = 2 * Math.PI * R;
+      const offset = (circ * (1 - safeScore / 100)).toFixed(2);
+      const tone = getScoreTone(safeScore);
+      const color = tone === "low" ? "#ef4444" : tone === "medium" ? "#f59e0b" : "#22c55e";
+      const glowClass = `glow-${tone}`;
+      const labelText = t("analytics.avg_readiness") || "Средняя готовность";
+      return `
+        <div class="analytics-gauge ${glowClass}">
+          <svg viewBox="0 0 220 220" width="200" height="200" style="display:block;margin:0 auto;" role="img" aria-label="${escapeHtml(labelText)}">
+            <circle cx="${cx}" cy="${cy}" r="${R}" fill="none" stroke="rgba(100,116,139,0.13)" stroke-width="18"/>
+            <circle cx="${cx}" cy="${cy}" r="${R}" fill="none"
+              stroke="${color}" stroke-width="18" stroke-linecap="round"
+              stroke-dasharray="${circ.toFixed(2)}"
+              stroke-dashoffset="${offset}"
+              transform="rotate(-90 ${cx} ${cy})"/>
+            <text x="${cx}" y="${cy - 6}" text-anchor="middle" dominant-baseline="middle"
+              style="font-size:32px;font-weight:800;fill:${color};">${safeScore}%</text>
+            <text x="${cx}" y="${cy + 22}" text-anchor="middle"
+              style="font-size:11px;font-weight:600;fill:#94A3B8;letter-spacing:0.06em;">${escapeHtml(labelText)}</text>
+          </svg>
+        </div>
+      `;
+    }
+
+    function renderStatusGrid(history) {
+      const items = (history || []).slice(0, 6);
+      if (!items.length) {
+        return `<div class="analytics-empty">${escapeHtml(t("analytics.finish_test_first"))}</div>`;
+      }
+
+      return `
+        <div class="analytics-status-grid">
+          ${items.map((item, index) => {
+            const tone = getScoreTone(item.score);
+            return `
+              <div class="analytics-status-tile glow-${tone}">
+                <div class="label">${escapeHtml(t("analytics.attempt_label", { index: index + 1 }))}</div>
+                <div class="value ${scoreToneClass(item.score, "score-tone")}">${escapeHtml(item.score)}%</div>
+                <div class="meta">${escapeHtml(translateSubjectName(item.subject_name))}</div>
+                <div class="meta">${escapeHtml(toneDescription(item.score))}</div>
+              </div>
+            `;
+          }).join("")}
+        </div>
+      `;
+    }
+
+    function renderCharts(progress, history) {
+      const el = $("analytics-charts");
+      if (!el) return;
+      if (!progress || !progress.total_tests) {
+        el.innerHTML = `<div class="analytics-empty">${escapeHtml(t("analytics.finish_test_first"))}</div>`;
+        return;
+      }
+
+      el.innerHTML = `
+        <div class="analytics-chart-card analytics-chart-card-wide">
+          <div class="analytics-page-card-head">
+            <div class="analytics-page-card-title">${escapeHtml(t("analytics.results_dynamics"))}</div>
+          </div>
+          ${renderLineChart(history)}
+        </div>
+        <div class="analytics-chart-card">
+          <div class="analytics-page-card-head">
+            <div class="analytics-page-card-title">${escapeHtml(t("analytics.avg_subjects"))}</div>
+          </div>
+          ${renderBarChart(progress.subjects)}
+        </div>
+        <div class="analytics-chart-card">
+          <div class="analytics-page-card-head">
+            <div class="analytics-page-card-title">${escapeHtml(t("analytics.profile_preparation"))}</div>
+          </div>
+          ${renderRadarChart(progress.subjects)}
+        </div>
+        <div class="analytics-chart-card">
+          <div class="analytics-page-card-head">
+            <div class="analytics-page-card-title">${escapeHtml(t("analytics.avg_readiness"))}</div>
+          </div>
+          ${renderGauge(progress.average_score)}
+        </div>
+        <div class="analytics-chart-card">
+          <div class="analytics-page-card-head">
+            <div class="analytics-page-card-title">${escapeHtml(t("analytics.score_traffic"))}</div>
+          </div>
+          ${renderStatusGrid(history)}
+        </div>
+      `;
+    }
+
+    function renderProgress(progress) {
+      const el = $("analytics-progress");
+      if (!progress || !progress.total_tests) {
+        setPlaceholder("analytics-progress", t("analytics.no_progress"));
+        return;
+      }
+
+      const summaryCards = [
+        { label: t("analytics.total_tests"), value: progress.total_tests },
+        { label: t("analytics.average_score"), value: `${progress.average_score}%` },
+        { label: t("analytics.completed_subjects"), value: progress.completed_subjects },
+        { label: t("analytics.strong_subject"), value: progress.strongest_subject ? translateSubjectName(progress.strongest_subject) : t("common.no_data") },
+        { label: t("analytics.weak_subject"), value: progress.weakest_subject ? translateSubjectName(progress.weakest_subject) : t("common.no_data") },
+        { label: t("analytics.last_activity"), value: progress.latest_activity ? formatDateTime(progress.latest_activity) : t("common.no_data") },
+      ];
+
+      el.innerHTML = `
+        <div class="analytics-summary-grid">
+          ${summaryCards.map((card, index) => `
+            <div class="analytics-kpi-card ${index === 1 ? `glow-${getScoreTone(progress.average_score)}` : ""}">
+              <div class="analytics-kpi-label">${escapeHtml(card.label)}</div>
+              <div class="analytics-kpi-value ${index === 1 ? scoreToneClass(progress.average_score, "score-tone") : ""}">${escapeHtml(card.value)}</div>
+            </div>
+          `).join("")}
+        </div>
+        <div class="analytics-page-section-title" style="margin-top:20px;">${escapeHtml(t("analytics.subjects"))}</div>
+        <div class="subjects-compact-grid">
+          ${progress.subjects.map(subject => `
+            <div class="subject-compact-card glow-${getScoreTone(subject.average_score)}">
+              <div class="subject-compact-head">
+                <span class="subject-compact-name">${escapeHtml(translateSubjectName(subject.subject_name))}</span>
+                <span class="analytics-level-pill ${scoreToneClass(subject.average_score, "score-pill")}">${escapeHtml(subject.average_score)}%</span>
+              </div>
+              <div class="analytics-progress-meter" style="margin-top:6px;">
+                <div class="analytics-progress-meter-fill ${getScoreTone(subject.average_score)}" style="width:${Math.max(4, Number(subject.average_score || 0))}%"></div>
+              </div>
+              <div style="margin-top:4px; font-size:12px; color:var(--muted);">${escapeHtml(t("analytics.subject_total"))}: ${escapeHtml(String(subject.total_tests))} · ${escapeHtml(formatTopicStats(subject.weak_topics).slice(0, 40))}</div>
+            </div>
+          `).join("")}
+        </div>
+      `;
+    }
+
+    function renderHistory(items) {
+      const el = $("analytics-history");
+      if (!items || items.length === 0) {
+        setPlaceholder("analytics-history", "История попыток пока пуста.");
+        return;
+      }
+
+      el.innerHTML = `
+        <div class="analytics-page-list">
+          ${items.map(item => `
+            <div class="analytics-page-card">
+              <div class="analytics-page-card-head">
+                <div class="analytics-page-card-title">${escapeHtml(item.subject_name)}</div>
+                <div class="analytics-history-score">${escapeHtml(item.score)}%</div>
+              </div>
+              <div class="analytics-page-card-meta">
+                <span>Тип: ${escapeHtml(item.test_type)}</span>
+                <span>Правильных: ${escapeHtml(item.correct_answers)}/${escapeHtml(item.total_questions)}</span>
+                <span>Уровень: ${escapeHtml(item.level)}</span>
+                <span>${escapeHtml(new Date(item.created_at).toLocaleString("ru-RU"))}</span>
+              </div>
+              <div class="analytics-page-card-weak">Слабые темы: ${escapeHtml(formatTopicStats(item.weak_topics))}</div>
+            </div>
+          `).join("")}
+        </div>
+      `;
+    }
+
+    // Иконки для типов ресурсов и методов
+    const RESOURCE_ICONS = { tool: "🛠", course: "🎓", video: "▶", article: "📄", search: "🔍", documentation: "📚" };
+    const METHOD_CARDS = [
+      { icon: "🍅", title: "Помодоро (25/5)", desc: "25 минут работы — 5 минут перерыв. Повышает концентрацию и снижает усталость. Не более 4 блоков подряд.", url: "https://pomofocus.io/" },
+      { icon: "🔁", title: "Интервальное повторение", desc: "Повторяйте темы через 1 → 3 → 7 → 14 дней. Основано на кривой забывания Эббингауза — материал остаётся в памяти надолго.", url: "https://apps.ankiweb.net/" },
+      { icon: "🗺", title: "Интеллект-карты", desc: "Зарисуйте ключевые темы предмета в виде схемы. Связи между понятиями укрепляют понимание структуры материала.", url: "https://www.mindmeister.com/" },
+      { icon: "🎓", title: "Khan Academy", desc: "Бесплатные видеокурсы по математике, языкам, истории и другим предметам. Подходит для восполнения пробелов.", url: "https://ru.khanacademy.org/" },
+    ];
+
+    function renderRecommendations(insights) {
+      const el = $("analytics-recommendations");
+      if (!insights) {
+        setPlaceholder("analytics-recommendations", t("analytics.no_recommendations"));
+        return;
+      }
+
+      // Отделяем Эббингауз-предупреждения от обычных действий
+      const ebbing = (insights.action_plan || []).filter(a => a.title.includes("Эббингауз") || a.title.includes("забывания"));
+      const actions = (insights.action_plan || []).filter(a => !a.title.includes("Эббингауз") && !a.title.includes("забывания"));
+
+      // Ресурсы: убираем Помодоро и Anki из общего списка (они идут в METHOD_CARDS)
+      const links = (insights.resources || []).filter(r =>
+        !r.url.includes("pomofocus") && !r.url.includes("ankiweb") && !r.url.includes("mindmeister")
+      );
+
+      el.innerHTML = `
+        <div class="recs-layout">
+
+          <!-- Левая колонка: вектор + эббингауз + темы -->
+          <div class="recs-col-left">
+            <div class="analytics-page-card">
+              <div class="analytics-page-card-head">
+                <div class="analytics-page-card-title">${escapeHtml(t("analytics.current_vector"))}</div>
+                <div class="analytics-level-pill">${escapeHtml(translateLevel(insights.current_level))}</div>
+              </div>
+              <div class="analytics-page-card-meta" style="flex-direction:column; gap:4px; align-items:flex-start;">
+                <span>${escapeHtml(t("analytics.trend"))}: <strong>${escapeHtml(insights.trend)}</strong></span>
+                <span>${escapeHtml(t("analytics.focus"))}: <strong>${escapeHtml(insights.focus_subject ? translateSubjectName(insights.focus_subject) : t("common.no_data"))}</strong></span>
+                <span>Следующий тест: <strong>${escapeHtml(translateTestType(insights.recommended_test_type))}${insights.recommended_test_subject ? " · " + escapeHtml(translateSubjectName(insights.recommended_test_subject)) : ""}</strong></span>
+              </div>
+              <div class="analytics-page-card-text" style="margin-top:10px; color:var(--accent);">${escapeHtml(insights.motivation_message)}</div>
+            </div>
+
+            ${ebbing.length > 0 ? `
+            <div class="analytics-page-card" style="margin-top:10px; border-left:3px solid var(--danger);">
+              <div class="analytics-page-card-title" style="color:var(--danger); margin-bottom:6px;">⚠ Риск забывания</div>
+              ${ebbing.map(a => `<div class="analytics-page-card-text">${escapeHtml(a.description)}</div>`).join("")}
+            </div>` : ""}
+
+            ${insights.priority_topics && insights.priority_topics.length > 0 ? `
+            <div class="analytics-page-card" style="margin-top:10px;">
+              <div class="analytics-page-card-title" style="margin-bottom:8px;">${escapeHtml(t("analytics.priority_topics"))}</div>
+              <div style="display:flex; flex-wrap:wrap; gap:6px;">
+                ${insights.priority_topics.map(tp => `<span class="wrong-q-chip">${escapeHtml(tp.topic_name)} ×${tp.mistakes}</span>`).join("")}
+              </div>
+            </div>` : ""}
+          </div>
+
+          <!-- Правая колонка: методы + план + ресурсы -->
+          <div class="recs-col-right">
+            <!-- Методы -->
+            <div class="analytics-page-card">
+              <div class="analytics-page-card-title" style="margin-bottom:10px;">Методы подготовки</div>
+              <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px;">
+                ${METHOD_CARDS.map(m => `
+                  <a href="${escapeHtml(m.url)}" target="_blank" rel="noreferrer" class="method-card">
+                    <div class="method-card-icon">${m.icon}</div>
+                    <div class="method-card-title">${escapeHtml(m.title)}</div>
+                    <div class="method-card-desc">${escapeHtml(m.desc)}</div>
+                  </a>
+                `).join("")}
+              </div>
+            </div>
+
+            <!-- План действий -->
+            ${actions.length > 0 ? `
+            <div class="analytics-page-card" style="margin-top:10px;">
+              <div class="analytics-page-card-title" style="margin-bottom:8px;">${escapeHtml(t("analytics.action_plan"))}</div>
+              <div style="display:flex; flex-direction:column; gap:8px;">
+                ${actions.map(action => `
+                  <div style="display:flex; gap:8px; align-items:flex-start;">
+                    <span class="analytics-level-pill" style="flex-shrink:0; margin-top:2px;">${escapeHtml(translatePriority(action.priority))}</span>
+                    <div>
+                      <div style="font-weight:600; font-size:13px;">${escapeHtml(action.title)}</div>
+                      <div style="font-size:13px; color:var(--text-soft); margin-top:2px;">${escapeHtml(action.description)}</div>
+                    </div>
+                  </div>
+                `).join("")}
+              </div>
+            </div>` : ""}
+
+            <!-- Ресурсы -->
+            ${links.length > 0 ? `
+            <div class="analytics-page-card" style="margin-top:10px;">
+              <div class="analytics-page-card-title" style="margin-bottom:8px;">${escapeHtml(t("analytics.resources"))}</div>
+              <div style="display:flex; flex-direction:column; gap:8px;">
+                ${links.slice(0, 4).map(resource => `
+                  <div style="display:flex; justify-content:space-between; align-items:center; gap:10px;">
+                    <div>
+                      <div style="font-size:13px; font-weight:600;">${escapeHtml(RESOURCE_ICONS[resource.resource_type] || "🔗")} ${escapeHtml(resource.title)}</div>
+                      <div style="font-size:12px; color:var(--muted);">${escapeHtml(resource.description)}</div>
+                    </div>
+                    <a class="btn" style="flex-shrink:0; padding:6px 12px; font-size:12px;" href="${escapeHtml(resource.url)}" target="_blank" rel="noreferrer">→</a>
+                  </div>
+                `).join("")}
+              </div>
+            </div>` : ""}
+          </div>
+        </div>
+      `;
+    }
+
+    // Цвета кластеров (по cluster_id)
+    const CLUSTER_COLORS = ["#6f7dff", "#f59e0b", "#ef4444", "#22c55e"];
+    const CLUSTER_COLORS_SOFT = ["rgba(111,125,255,0.22)", "rgba(245,158,11,0.18)", "rgba(239,68,68,0.16)", "rgba(34,197,94,0.18)"];
+
+    function renderFeatureBar(label, value, maxValue, color) {
+      const pct = maxValue > 0 ? Math.min(100, Math.round(Math.abs(Number(value)) / maxValue * 100)) : 0;
+      const numVal = Number(value);
+      const sign = numVal > 0 ? "+" : "";
+      const displayVal = Number.isInteger(numVal) ? numVal : numVal.toFixed(1);
+      return `
+        <div style="margin-bottom:10px;">
+          <div style="display:flex;justify-content:space-between;margin-bottom:3px;">
+            <span style="font-size:13px;color:var(--text-soft)">${escapeHtml(label)}</span>
+            <span style="font-size:13px;font-weight:600;color:${color}">${escapeHtml(sign + String(displayVal))}</span>
+          </div>
+          <div style="height:7px;border-radius:8px;background:var(--border);overflow:hidden;">
+            <div style="height:100%;width:${pct}%;border-radius:8px;background:${color};transition:width 0.6s ease;"></div>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderScatterPlot(scatterPoints, clusterCenters, userClusterId) {
+      if (!scatterPoints || scatterPoints.length === 0) return "";
+
+      const W = 440, H = 290;
+      const pad = { top: 28, right: 52, bottom: 44, left: 46 };
+      const iW = W - pad.left - pad.right;
+      const iH = H - pad.top - pad.bottom;
+
+      // Clamped coordinate functions — точки не вылезают за края
+      function px(xNorm) { return pad.left + Math.min(Math.max(xNorm, 0), 1) * iW; }
+      function py(yNorm) { return pad.top + (1 - Math.min(Math.max(yNorm, 0), 1)) * iH; }
+
+      const selfPt = scatterPoints.find(p => p.is_self);
+      const selfX = selfPt ? Math.round(selfPt.x * 100) : null;
+      const selfY = selfPt ? Math.round(selfPt.y * 100) : null;
+
+      // Определяем квадрант пользователя
+      let userQuadrant = "", quadrantColor = "#64748B";
+      if (selfPt) {
+        if (selfPt.x >= 0.5 && selfPt.y >= 0.5)       { userQuadrant = "Отличник";      quadrantColor = "#16A34A"; }
+        else if (selfPt.x < 0.5 && selfPt.y >= 0.5)   { userQuadrant = "Способный";     quadrantColor = "#D97706"; }
+        else if (selfPt.x >= 0.5 && selfPt.y < 0.5)   { userQuadrant = "Старательный";  quadrantColor = "#2563EB"; }
+        else                                             { userQuadrant = "Нужна работа"; quadrantColor = "#DC2626"; }
+      }
+
+      // Фоны квадрантов
+      const quadBg = `
+        <rect x="${pad.left}"  y="${pad.top}"   width="${iW/2}" height="${iH/2}" fill="rgba(217,119,6,0.06)"/>
+        <rect x="${px(0.5)}"   y="${pad.top}"   width="${iW/2}" height="${iH/2}" fill="rgba(22,163,74,0.06)"/>
+        <rect x="${pad.left}"  y="${py(0.5)}"   width="${iW/2}" height="${iH/2}" fill="rgba(220,38,38,0.06)"/>
+        <rect x="${px(0.5)}"   y="${py(0.5)}"   width="${iW/2}" height="${iH/2}" fill="rgba(37,99,235,0.06)"/>
+        <text x="${pad.left+5}"       y="${pad.top+13}"        style="font-size:9px;fill:rgba(180,120,0,0.65);font-weight:600;">Способный</text>
+        <text x="${W-pad.right-5}"    y="${pad.top+13}"        text-anchor="end" style="font-size:9px;fill:rgba(22,163,74,0.75);font-weight:600;">Отличник</text>
+        <text x="${pad.left+5}"       y="${H-pad.bottom-5}"    style="font-size:9px;fill:rgba(220,38,38,0.65);font-weight:600;">Нужна работа</text>
+        <text x="${W-pad.right-5}"    y="${H-pad.bottom-5}"    text-anchor="end" style="font-size:9px;fill:rgba(37,99,235,0.65);font-weight:600;">Старательный</text>
+      `;
+
+      // Разделители квадрантов
+      const dividers = `
+        <line x1="${px(0.5)}" y1="${pad.top}"       x2="${px(0.5)}" y2="${H-pad.bottom}" stroke="rgba(0,0,0,0.09)" stroke-width="1" stroke-dasharray="4,3"/>
+        <line x1="${pad.left}" y1="${py(0.5)}"       x2="${W-pad.right}" y2="${py(0.5)}" stroke="rgba(0,0,0,0.09)" stroke-width="1" stroke-dasharray="4,3"/>
+      `;
+
+      // Подписи осей (пропускаем 0 во избежание артефакта 0,0)
+      const gridLabels = [25, 50, 75, 100].map(v => {
+        const nv = v / 100;
+        return `
+          <text x="${pad.left-5}" y="${py(nv)+4}" text-anchor="end" style="font-size:10px;fill:#94A3B8;">${v}</text>
+          <text x="${px(nv)}" y="${H-pad.bottom+13}" text-anchor="middle" style="font-size:10px;fill:#94A3B8;">${v}</text>
+        `;
+      }).join("");
+
+      // Другие студенты — серые точки
+      const peerDots = scatterPoints.filter(p => !p.is_self).map(pt => `
+        <circle cx="${px(pt.x)}" cy="${py(pt.y)}" r="4" fill="#CBD5E1" stroke="white" stroke-width="0.8">
+          <title>Активность ${Math.round(pt.x*100)}%, балл ${Math.round(pt.y*100)}%</title>
+        </circle>`
+      ).join("");
+
+      // Точка "Вы" — всегда видна, не обрезается
+      const selfDot = selfPt ? (() => {
+        const cx = px(selfPt.x);
+        const cy = py(selfPt.y);
+        const lx = selfPt.x > 0.75 ? cx - 13 : cx + 13;
+        const la = selfPt.x > 0.75 ? "end" : "start";
+        const ly = selfPt.y > 0.88 ? cy + 18 : cy - 13;
+        return `
+          <circle cx="${cx}" cy="${cy}" r="18" fill="${quadrantColor}" opacity="0.10"/>
+          <circle cx="${cx}" cy="${cy}" r="8"  fill="${quadrantColor}" stroke="white" stroke-width="2.5"/>
+          <text x="${lx}" y="${ly}" text-anchor="${la}" style="font-size:11px;font-weight:700;fill:${quadrantColor};">Вы</text>
+        `;
+      })() : "";
+
+      // Оси
+      const axes = `
+        <line x1="${pad.left}" y1="${pad.top}" x2="${pad.left}" y2="${H-pad.bottom}" stroke="#94A3B8" stroke-width="1.5"/>
+        <line x1="${pad.left}" y1="${H-pad.bottom}" x2="${W-pad.right}" y2="${H-pad.bottom}" stroke="#94A3B8" stroke-width="1.5"/>
+        <text x="${pad.left}" y="${pad.top-8}" style="font-size:10px;fill:#64748B;font-weight:600;">↑ Средний балл (%)</text>
+        <text x="${W-pad.right}" y="${H-pad.bottom+28}" text-anchor="end" style="font-size:10px;fill:#64748B;font-weight:600;">Частота тестов (%) →</text>
+      `;
+
+      // Вывод что означает позиция
+      const quadrantDesc = {
+        "Отличник":     "Часто тестируетесь и показываете высокий результат — продолжайте в том же духе",
+        "Способный":    "Высокий балл при редких тестах — тестируйтесь чаще, чтобы закрепить результат",
+        "Старательный": "Часто тестируетесь — продолжайте практику, результаты со временем подтянутся",
+        "Нужна работа": "Мало практики и низкий балл — стоит увеличить частоту тестов и изучить слабые темы",
+      };
+
+      const summaryBlock = selfPt ? `
+        <div style="margin-top:14px;padding:12px 16px;border-radius:10px;background:${quadrantColor}14;border:1px solid ${quadrantColor}28;">
+          <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:#64748B;margin-bottom:4px;">Ваша позиция на карте</div>
+          <div style="font-size:15px;font-weight:700;color:${quadrantColor};margin-bottom:3px;">${userQuadrant} &nbsp;·&nbsp; активность ${selfX}% &nbsp;·&nbsp; средний балл ${selfY}%</div>
+          <div style="font-size:13px;color:#475569;line-height:1.5;">${quadrantDesc[userQuadrant] || ""}</div>
+        </div>
+      ` : "";
+
+      return `
+        <svg viewBox="0 0 ${W} ${H}" style="width:100%;max-width:${W}px;display:block;margin:0 auto;" role="img" aria-label="Карта успеваемости">
+          ${quadBg}${dividers}${gridLabels}${peerDots}${selfDot}${axes}
+        </svg>
+        <div style="display:flex;gap:16px;justify-content:center;margin-top:6px;font-size:12px;color:#64748B;">
+          <span style="display:flex;align-items:center;gap:5px;">
+            <svg width="14" height="14"><circle cx="7" cy="7" r="6" fill="${quadrantColor}" stroke="white" stroke-width="2"/></svg>
+            <strong>Вы</strong>
+          </span>
+          <span style="display:flex;align-items:center;gap:5px;">
+            <svg width="14" height="14"><circle cx="7" cy="7" r="5" fill="#CBD5E1" stroke="white" stroke-width="1"/></svg>
+            Другие студенты
+          </span>
+        </div>
+        ${summaryBlock}
+      `;
+    }
+
+    function renderCluster(cluster) {
+      if (!cluster) {
+        setPlaceholder("analytics-cluster", "Нет данных по кластеризации.");
+        return;
+      }
+      const f = cluster.features || {};
+      const labels = cluster.feature_labels || {};
+      const isNA = cluster.cluster_id === -1;
+      const avgScore = Number(f.avg_score || 0);
+      const pillTone = avgScore < 60 ? "score-pill-low" : avgScore < 85 ? "score-pill-medium" : "score-pill-high";
+      const clusterColor = isNA ? "var(--muted)" : CLUSTER_COLORS[(cluster.cluster_id || 0) % CLUSTER_COLORS.length];
+
+      const improvement = Number(f.improvement || 0);
+      const improvColor = improvement > 0 ? "var(--success)" : improvement < 0 ? "var(--danger)" : "var(--muted)";
+
+      $("analytics-cluster").innerHTML = `
+        <div class="analytics-page-card">
+          <div class="analytics-page-card-head">
+            <div class="analytics-page-card-title" style="color:${clusterColor}">
+              ${isNA ? "Обзор кластеров" : "Кластер: " + escapeHtml(cluster.cluster_name)}
+            </div>
+            ${!isNA ? `<div class="analytics-level-pill ${pillTone}">Группа ${escapeHtml(String(cluster.cluster_id + 1))} · ${escapeHtml(String(cluster.peers_count))} чел.</div>` : `<div class="analytics-level-pill">${escapeHtml(String(cluster.total_students))} студентов</div>`}
+          </div>
+          <div class="analytics-page-card-text">${escapeHtml(cluster.summary)}</div>
+
+          ${!isNA ? `
+          <div style="margin:18px 0 8px;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:var(--muted);">Признаки (нормализованы по когорте)</div>
+          ${renderFeatureBar(labels.avg_score || "Средний балл", f.avg_score, 100,
+              avgScore < 60 ? "var(--danger)" : avgScore < 85 ? "var(--warning)" : "var(--success)")}
+          ${renderFeatureBar(labels.test_frequency || "Частота тестов", f.test_frequency, 10, "var(--accent)")}
+          ${renderFeatureBar(labels.consistency || "Стабильность", f.consistency, 100,
+              Number(f.consistency) > 70 ? "var(--success)" : "var(--warning)")}
+          ${renderFeatureBar(labels.subject_breadth || "Охват предметов", f.subject_breadth, 100, "var(--accent-2)")}
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-top:14px;padding-top:12px;border-top:1px solid var(--border);">
+            <span style="font-size:13px;color:var(--text-soft)">${escapeHtml(labels.improvement || "Динамика")}</span>
+            <span style="font-size:14px;font-weight:700;color:${improvColor}">${improvement > 0 ? "+" : ""}${improvement.toFixed(1)}%</span>
+          </div>
+          ` : ""}
+        </div>
+
+        ${renderScatterPlot(cluster.scatter_points, cluster.cluster_centers, cluster.cluster_id)}
+      `;
+    }
+
+    function renderMlRecommendations(items) {
+      if (!items || !items.length) {
+        setPlaceholder("analytics-ml-recs", "ML-рекомендации появятся после тестов.");
+        return;
+      }
+      $("analytics-ml-recs").innerHTML = `
+        <div class="analytics-page-list">
+          ${items.map(item => `
+            <div class="analytics-page-card">
+              <div class="analytics-page-card-head">
+                <div class="analytics-page-card-title">${escapeHtml(item.title)}</div>
+                <div class="analytics-level-pill">confidence ${escapeHtml(Math.round((item.confidence || 0) * 100))}%</div>
+              </div>
+              <div class="analytics-page-card-text">${escapeHtml(item.reason)}</div>
+              <div class="analytics-page-card-meta">
+                ${(item.actions || []).map(a => `<span>• ${escapeHtml(a)}</span>`).join("")}
+              </div>
+            </div>
+          `).join("")}
+        </div>
+      `;
+    }
+
+    function addChatMessage(role, text) {
+      const log = $("ai-chat-log");
+      if (!log) return;
+      const cls = role === "assistant" ? "glow-high" : "";
+      const who = role === "assistant" ? "AI" : "Вы";
+      const div = document.createElement("div");
+      div.className = `analytics-page-card ${cls}`;
+      div.innerHTML = `
+        <div class="analytics-page-card-head">
+          <div class="analytics-page-card-title">${escapeHtml(who)}</div>
+        </div>
+        <div class="analytics-page-card-text">${escapeHtml(text)}</div>
+      `;
+      log.appendChild(div);
+      log.scrollTop = log.scrollHeight;
+    }
+
+    async function askAssistant() {
+      const input = $("ai-chat-input");
+      const message = (input?.value || "").trim();
+      if (!message) return;
+      addChatMessage("user", message);
+      input.value = "";
+      try {
+        const res = await Api.request("/ai/assistant", {
+          method: "POST",
+          auth: true,
+          body: { message },
+        });
+        addChatMessage("assistant", res.reply || "Нет ответа.");
+      } catch (e) {
+        if (e.message === "SESSION_EXPIRED") return;
+        addChatMessage("assistant", "Ошибка: " + e.message);
+      }
+    }
+
+    function renderStudyPlan(plan) {
+      const el = $("analytics-study-plan");
+      if (!plan || !plan.items || plan.items.length === 0) {
+        setPlaceholder("analytics-study-plan", "Недельный план появится после накопления данных о прогрессе.");
+        return;
+      }
+
+      el.innerHTML = `
+        <div class="analytics-page-card">
+          <div class="analytics-page-card-head">
+            <div class="analytics-page-card-title">План на ${escapeHtml(plan.horizon_days)} дней</div>
+          </div>
+          <div class="analytics-page-card-text">${escapeHtml(plan.overview)}</div>
+        </div>
+        <div class="analytics-page-list" style="margin-top:12px;">
+          ${plan.items.map(item => `
+            <div class="analytics-page-card">
+              <div class="analytics-page-card-head">
+                <div class="analytics-page-card-title">${escapeHtml(item.day_label)} · ${escapeHtml(item.title)}</div>
+                <div class="analytics-level-pill">${escapeHtml(item.priority)}</div>
+              </div>
+              <div class="analytics-page-card-meta">
+                <span>Тип: ${escapeHtml(item.item_type)}</span>
+                <span>Длительность: ${escapeHtml(item.duration_minutes)} мин</span>
+                <span>Предмет: ${escapeHtml(item.focus_subject || "—")}</span>
+                <span>Тема: ${escapeHtml(item.topic_name || "—")}</span>
+              </div>
+            </div>
+          `).join("")}
+        </div>
+      `;
+    }
+
+    async function safeRequest(path, opts) {
+      try {
+        return await Api.request(path, opts);
+      } catch (e) {
+        if (e.message === "SESSION_EXPIRED") throw e;
+        return null;
+      }
+    }
+
+    async function loadAnalytics() {
+      try {
+        const [progress, history, insights, cluster, mlRecs] = await Promise.all([
+          safeRequest("/tests/progress", { auth: true }),
+          safeRequest("/tests/history", { auth: true }),
+          safeRequest("/tests/insights", { auth: true }),
+          safeRequest("/ai/cluster-me", { auth: true }),
+          safeRequest("/ai/recommendations-plus", { auth: true }),
+        ]);
+        renderCharts(progress, history);
+        renderProgress(progress);
+        renderRecommendations(insights);
+        renderCluster(cluster);
+        renderMlRecommendations(mlRecs);
+      } catch (e) {
+        if (e.message === "SESSION_EXPIRED") return;
+        setPlaceholder("analytics-charts", "Ошибка: " + e.message, true);
+      }
+    }
+
+    $("btn-refresh-analytics").addEventListener("click", loadAnalytics);
+    $("btn-exit").onclick = () => { Api.setToken(null); window.location.href = "/app/"; };
+    $("btn-ai-send").addEventListener("click", askAssistant);
+    $("ai-chat-input").addEventListener("keydown", (e) => {
+      if (e.key === "Enter") askAssistant();
+    });
+
+    // ── Переключение вкладок ──
+    document.querySelectorAll("#analytics-tabs .tab").forEach(tab => {
+      tab.addEventListener("click", function() {
+        const target = this.dataset.tab;
+        document.querySelectorAll("#analytics-tabs .tab").forEach(t => t.classList.remove("active"));
+        document.querySelectorAll(".panel").forEach(p => p.classList.remove("active"));
+        this.classList.add("active");
+        const panel = document.getElementById("tab-" + target);
+        if (panel) panel.classList.add("active");
+      });
+    });
+
+    applyI18n(document);
+    setWhoAmI();
+    addChatMessage("assistant", "Привет! Спросите, например: 'В каком я кластере?'");
+    loadAnalytics();
+  </script>
+</body>
+</html>

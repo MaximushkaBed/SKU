@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <title>Вход — Самоконтроль подготовки</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="/app/app.css?v=18" />
+</head>
+<body>
+  <div class="page">
+    <header class="header site-header site-header-main">
+      <div class="site-header-main-inner">
+        <div class="site-header-main-left">
+          <span class="site-brand-text">Самоконтроль подготовки</span>
+        </div>
+        <div class="site-header-main-right">
+          <a class="btn" href="/app/register.html" data-i18n="nav.register">Регистрация</a>
+        </div>
+      </div>
+    </header>
+
+    <div class="auth-layout">
+      <div class="auth-card">
+        <p class="auth-title">Добро пожаловать</p>
+        <p class="auth-subtitle">Войдите в аккаунт, чтобы продолжить подготовку</p>
+
+        <div class="form-group">
+          <label for="login-email">Email</label>
+          <input id="login-email" type="email" placeholder="student@example.com" autocomplete="email" />
+        </div>
+        <div class="form-group">
+          <label for="login-pass">Пароль</label>
+          <input id="login-pass" type="password" placeholder="••••••••" autocomplete="current-password" />
+        </div>
+
+        <div class="form-error" id="login-error"></div>
+
+        <button class="btn btn-primary" id="btn-login" style="width:100%;margin-top:4px;">
+          Войти
+        </button>
+
+        <div class="auth-switch">
+          Нет аккаунта? <a href="/app/register.html">Зарегистрироваться</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/app/app.js?v=18"></script>
+  <script>
+    // Auto-redirect if already logged in
+    (function() {
+      const token = Api.getToken();
+      const payload = token ? Api.decodeJwt(token) : null;
+      if (payload && payload.sub && payload.exp && payload.exp * 1000 > Date.now()) {
+        window.location.replace("/app/dashboard.html");
+      }
+    })();
+
+    const loginError = document.getElementById("login-error");
+    const loginBtn = document.getElementById("btn-login");
+
+    function showError(msg) {
+      loginError.textContent = msg;
+      loginError.classList.add("visible");
+    }
+    function clearError() {
+      loginError.classList.remove("visible");
+    }
+
+    async function doLogin() {
+      const email = document.getElementById("login-email").value.trim();
+      const password = document.getElementById("login-pass").value.trim();
+      if (!email || !password) { showError("Введите email и пароль"); return; }
+
+      clearError();
+      loginBtn.disabled = true;
+      loginBtn.textContent = "Входим…";
+
+      try {
+        const form = new URLSearchParams();
+        form.append("username", email);
+        form.append("password", password);
+        form.append("grant_type", "password");
+        const token = await Api.request("/auth/token", { method: "POST", body: form, form: true });
+        Api.setToken(token.access_token);
+        window.location.href = "/app/dashboard.html";
+      } catch (e) {
+        const raw = e.message || "";
+        let msg = "Неверный email или пароль";
+        try {
+          const obj = JSON.parse(raw);
+          if (obj.detail) msg = obj.detail;
+        } catch {}
+        showError(msg);
+        loginBtn.disabled = false;
+        loginBtn.textContent = "Войти";
+      }
+    }
+
+    loginBtn.addEventListener("click", doLogin);
+    document.getElementById("login-pass").addEventListener("keydown", e => {
+      if (e.key === "Enter") doLogin();
+    });
+    document.getElementById("login-email").addEventListener("keydown", e => {
+      if (e.key === "Enter") document.getElementById("login-pass").focus();
+    });
+
+    // Handle URL params
+    (function() {
+      const params = new URLSearchParams(location.search);
+      if (params.get("session_expired") === "1") {
+        showError("Сессия истекла. Войдите снова.");
+        history.replaceState({}, "", location.pathname);
+      }
+      const regEmail = params.get("registered_email");
+      if (regEmail) {
+        document.getElementById("login-email").value = regEmail;
+        const s = document.createElement("div");
+        s.className = "form-success visible";
+        s.textContent = "Регистрация завершена. Теперь войдите в аккаунт.";
+        loginBtn.parentElement.insertBefore(s, loginBtn);
+        history.replaceState({}, "", location.pathname);
+      }
+    })();
+
+    applyI18n(document);
+  </script>
+</body>
+</html>

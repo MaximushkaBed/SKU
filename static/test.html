@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <title data-i18n-title="test.title">Пройти тест — Самоконтроль подготовки</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="/app/app.css?v=18" />
+</head>
+<body>
+  <div class="page">
+    <header class="header site-header site-header-main">
+      <div class="site-header-main-inner">
+        <div class="site-header-main-left">
+          <a class="btn" href="/app/dashboard.html" data-i18n="nav.dashboard">Кабинет</a>
+        </div>
+        <div class="site-header-main-right">
+          <a class="btn btn-primary" href="/app/test.html" data-i18n="nav.test">Пройти тест</a>
+          <a class="btn" href="/app/history.html" data-i18n="nav.history">История</a>
+          <a class="btn" href="/app/plan.html" data-i18n="nav.plan">План</a>
+          <a class="btn" href="/app/analytics.html" data-i18n="nav.analytics">Аналитика</a>
+          <button class="btn btn-danger" id="btn-exit" type="button" data-i18n="nav.logout">Выйти</button>
+        </div>
+      </div>
+    </header>
+
+    <div class="card dash-main">
+      <div id="test-start">
+        <div class="section-title" data-i18n="test.choose_test">Выбор теста</div>
+        <div class="log" id="test-error" style="margin-bottom:12px; display:none;"></div>
+        <div class="row">
+          <div>
+            <label data-i18n="test.subject">Предмет</label>
+            <select id="subject-id">
+              <option value="" data-i18n="test.select_subject">— Выберите предмет —</option>
+            </select>
+          </div>
+          <div>
+            <label data-i18n="test.type">Тип теста</label>
+            <select id="test-type">
+              <option value="quick" data-i18n="test.quick">Быстрый (лёгкий)</option>
+              <option value="full" data-i18n="test.full">Полный (сложный)</option>
+            </select>
+          </div>
+        </div>
+        <button class="btn btn-primary" id="btn-start-test" type="button" style="margin-top:12px;" data-i18n="test.start">Начать тест</button>
+      </div>
+
+      <div id="test-questions" style="display:none; margin-top:20px;">
+        <div class="section-title" data-i18n="test.questions">Вопросы</div>
+        <div id="questions-list"></div>
+        <div style="margin-top:16px; display:flex; gap:10px;">
+          <button class="btn btn-primary" id="btn-submit-test" type="button" data-i18n="test.submit">Отправить ответы</button>
+          <button class="btn" id="btn-cancel-test" type="button" data-i18n="test.cancel">Отмена</button>
+        </div>
+        <div class="log" id="test-result" style="margin-top:12px;">—</div>
+      </div>
+
+      <div id="test-summary" style="display:none; margin-top:20px;">
+        <div class="section-title" data-i18n="test.result">Результат теста</div>
+        <div class="result-screen">
+          <div class="result-hero">
+            <div>
+              <div class="result-score-label" data-i18n="test.your_result">Ваш результат</div>
+              <div class="result-score" id="summary-score">0%</div>
+            </div>
+            <div class="result-level" id="summary-level">уровень: —</div>
+          </div>
+
+          <div class="result-stats">
+            <div class="result-stat-card">
+              <div class="result-stat-value" id="summary-correct">0</div>
+              <div class="result-stat-label" data-i18n="test.correct_answers">Правильных ответов</div>
+            </div>
+            <div class="result-stat-card">
+              <div class="result-stat-value" id="summary-total">0</div>
+              <div class="result-stat-label" data-i18n="test.total_questions">Всего вопросов</div>
+            </div>
+            <div class="result-stat-card">
+              <div class="result-stat-value" id="summary-wrong">0</div>
+              <div class="result-stat-label" data-i18n="test.errors">Ошибок</div>
+            </div>
+          </div>
+
+          <div class="result-recommendations">
+            <div class="result-block-title" data-i18n="test.recommendations">Рекомендации</div>
+            <div class="result-recommendation-text" id="summary-recommendations">Рекомендации отсутствуют.</div>
+          </div>
+
+          <div class="result-recommendations" style="margin-top:14px;">
+            <div class="result-block-title" data-i18n="test.weak_topics">Слабые темы</div>
+            <div class="result-recommendation-text" id="summary-weak-topics">Темы пока не определены.</div>
+          </div>
+
+          <div class="result-recommendations" style="margin-top:14px;">
+            <div class="result-block-title" data-i18n="test.what_to_study">Что изучить</div>
+            <div id="summary-topic-resources" class="result-resource-list"></div>
+          </div>
+
+          <div class="result-recommendations" style="margin-top:14px;">
+            <div class="result-block-title" data-i18n="test.question_plan">План по вопросам</div>
+            <div id="summary-question-plan" class="result-resource-list"></div>
+          </div>
+
+          <div class="result-actions">
+            <button class="btn btn-primary" id="btn-restart-test" type="button" data-i18n="test.retry">Пройти ещё раз</button>
+            <a class="btn" href="/app/dashboard.html" data-i18n="test.return_dashboard">Вернуться в кабинет</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <footer class="footer">
+      <div class="small muted">Поддержка: batamir5@gmail.com</div>
+    </footer>
+  </div>
+
+  <script src="/app/app.js?v=18"></script>
+  <script>
+    I18N.ru["test.title"] = "Пройти тест — Самоконтроль подготовки";
+    I18N.kz["test.title"] = "Тест тапсыру — Дайындықты өзін-өзі бақылау";
+    I18N.ru["test.choose_test"] = "Выбор теста";
+    I18N.kz["test.choose_test"] = "Тестті таңдау";
+    I18N.ru["test.subject"] = "Предмет";
+    I18N.kz["test.subject"] = "Пән";
+    I18N.ru["test.select_subject"] = "— Выберите предмет —";
+    I18N.kz["test.select_subject"] = "— Пәнді таңдаңыз —";
+    I18N.ru["test.type"] = "Тип теста";
+    I18N.kz["test.type"] = "Тест түрі";
+    I18N.ru["test.quick"] = "Быстрый (лёгкий)";
+    I18N.kz["test.quick"] = "Жылдам (жеңіл)";
+    I18N.ru["test.full"] = "Полный (сложный)";
+    I18N.kz["test.full"] = "Толық (күрделі)";
+    I18N.ru["test.start"] = "Начать тест";
+    I18N.kz["test.start"] = "Тестті бастау";
+    I18N.ru["test.questions"] = "Вопросы";
+    I18N.kz["test.questions"] = "Сұрақтар";
+    I18N.ru["test.submit"] = "Отправить ответы";
+    I18N.kz["test.submit"] = "Жауаптарды жіберу";
+    I18N.ru["test.cancel"] = "Отмена";
+    I18N.kz["test.cancel"] = "Болдырмау";
+    I18N.ru["test.result"] = "Результат теста";
+    I18N.kz["test.result"] = "Тест нәтижесі";
+    I18N.ru["test.your_result"] = "Ваш результат";
+    I18N.kz["test.your_result"] = "Сіздің нәтижеңіз";
+    I18N.ru["test.correct_answers"] = "Правильных ответов";
+    I18N.kz["test.correct_answers"] = "Дұрыс жауап";
+    I18N.ru["test.total_questions"] = "Всего вопросов";
+    I18N.kz["test.total_questions"] = "Барлық сұрақ";
+    I18N.ru["test.errors"] = "Ошибок";
+    I18N.kz["test.errors"] = "Қателер";
+    I18N.ru["test.recommendations"] = "Рекомендации";
+    I18N.kz["test.recommendations"] = "Ұсыныстар";
+    I18N.ru["test.no_recommendations"] = "Рекомендации отсутствуют.";
+    I18N.kz["test.no_recommendations"] = "Ұсыныстар жоқ.";
+    I18N.ru["test.weak_topics"] = "Слабые темы";
+    I18N.kz["test.weak_topics"] = "Әлсіз тақырыптар";
+    I18N.ru["test.no_topics"] = "Темы пока не определены.";
+    I18N.kz["test.no_topics"] = "Тақырыптар әзірге анықталмады.";
+    I18N.ru["test.what_to_study"] = "Что изучить";
+    I18N.kz["test.what_to_study"] = "Нені оқу керек";
+    I18N.ru["test.question_plan"] = "План по вопросам";
+    I18N.kz["test.question_plan"] = "Сұрақтар бойынша жоспар";
+    I18N.ru["test.retry"] = "Пройти ещё раз";
+    I18N.kz["test.retry"] = "Қайта тапсыру";
+    I18N.ru["test.return_dashboard"] = "Вернуться в кабинет";
+    I18N.kz["test.return_dashboard"] = "Кабинетке оралу";
+    I18N.ru["test.level_prefix"] = "Уровень: {level}";
+    I18N.kz["test.level_prefix"] = "Деңгей: {level}";
+    I18N.ru["test.weak_topic_fallback"] = "Тема {id}";
+    I18N.kz["test.weak_topic_fallback"] = "Тақырып {id}";
+    I18N.ru["test.materials_missing"] = "Материалы пока не подобраны.";
+    I18N.kz["test.materials_missing"] = "Материалдар әлі таңдалмады.";
+    I18N.ru["test.materials_in_explanation"] = "Материалы и правильные ответы открываются на странице разбора каждого вопроса.";
+    I18N.kz["test.materials_in_explanation"] = "Материалдар мен дұрыс жауаптар әр сұрақтың талдау бетінде көрсетіледі.";
+    I18N.ru["test.open_question_explanation"] = "Открыть разбор";
+    I18N.kz["test.open_question_explanation"] = "Түсіндірмені ашу";
+    I18N.ru["test.no_bad_questions"] = "Пока нет вопросов для разбора.";
+    I18N.kz["test.no_bad_questions"] = "Қазір талдауға арналған сұрақтар жоқ.";
+    I18N.ru["test.open_resource"] = "Открыть";
+    I18N.kz["test.open_resource"] = "Ашу";
+    I18N.ru["test.select_subject_alert"] = "Выберите предмет";
+    I18N.kz["test.select_subject_alert"] = "Пәнді таңдаңыз";
+    I18N.ru["test.no_questions"] = "Нет вопросов для этого теста. Обратитесь к преподавателю.";
+    I18N.kz["test.no_questions"] = "Бұл тест үшін сұрақтар жоқ. Оқытушыға хабарласыңыз.";
+    I18N.ru["test.answer_and_submit"] = "Ответьте на вопросы и нажмите «Отправить ответы».";
+    I18N.kz["test.answer_and_submit"] = "Сұрақтарға жауап беріп, «Жауаптарды жіберу» түймесін басыңыз.";
+    I18N.ru["test.error"] = "Ошибка: {message}";
+    I18N.kz["test.error"] = "Қате: {message}";
+    I18N.ru["test.no_clear_weak_topics"] = "Явно выраженных слабых тем в этом тесте не найдено.";
+    I18N.kz["test.no_clear_weak_topics"] = "Бұл тестте айқын әлсіз тақырыптар табылмады.";
+    I18N.ru["test.subject_articles"] = "Подборка статей по предмету «{subject}»";
+    I18N.kz["test.subject_articles"] = "«{subject}» пәні бойынша мақалалар";
+    I18N.ru["test.subject_articles_desc"] = "Найдите статьи, разборы и конспекты по предмету «{subject}».";
+    I18N.kz["test.subject_articles_desc"] = "«{subject}» пәні бойынша мақалалар, талдаулар және конспектілер табыңыз.";
+    I18N.ru["test.subject_videos"] = "Видео-уроки по предмету «{subject}»";
+    I18N.kz["test.subject_videos"] = "«{subject}» пәні бойынша бейнесабақтар";
+    I18N.ru["test.subject_videos_desc"] = "Подборка видео и объяснений по предмету «{subject}».";
+    I18N.kz["test.subject_videos_desc"] = "«{subject}» пәні бойынша бейне мен түсіндірмелер жинағы.";
+    I18N.ru["test.topic_articles"] = "Статьи по теме: {topic}";
+    I18N.kz["test.topic_articles"] = "{topic} тақырыбы бойынша мақалалар";
+    I18N.ru["test.topic_articles_desc"] = "Подборка материалов по теме «{topic}».";
+    I18N.kz["test.topic_articles_desc"] = "«{topic}» тақырыбы бойынша материалдар жинағы.";
+    I18N.ru["test.topic_videos"] = "Видео по теме: {topic}";
+    I18N.kz["test.topic_videos"] = "{topic} тақырыбы бойынша бейне";
+    I18N.ru["test.topic_videos_desc"] = "Видео-разборы и объяснения по теме «{topic}».";
+    I18N.kz["test.topic_videos_desc"] = "«{topic}» тақырыбы бойынша бейнеталдаулар мен түсіндірмелер.";
+
+    const payload = requireAuthOrRedirect();
+    if (!payload) { /* redirected */ }
+
+    document.addEventListener("DOMContentLoaded", function() {
+      var exitBtn = document.getElementById("btn-exit");
+      if (exitBtn) exitBtn.addEventListener("click", function() {
+        Api.setToken(null);
+        window.location.href = "/app/";
+      });
+    });
+
+    let currentTestId = null;
+    let currentQuestions = [];
+    let currentSubjectName = "";
+    let currentTopicsMap = {};
+
+    async function loadSubjects() {
+      const sel = document.getElementById("subject-id");
+      try {
+        const subjects = await Api.request("/subjects/");
+        sel.innerHTML = `<option value="">${escapeHtml(t("test.select_subject"))}</option>`;
+        subjects.forEach(s => {
+          const opt = document.createElement("option");
+          opt.value = s.id;
+          opt.textContent = translateSubjectName(s.name);
+          sel.appendChild(opt);
+        });
+      } catch (e) {
+        sel.innerHTML = `<option value="">${escapeHtml(t("common.loading_error"))}</option>`;
+        const errEl = document.getElementById("test-error");
+        if (errEl) {
+          errEl.textContent = t("common.loading_subjects_error", { message: e.message || String(e) });
+          errEl.classList.add("error");
+          errEl.style.display = "block";
+        }
+      }
+    }
+
+    loadSubjects();
+
+    function showError(msg) {
+      const el = document.getElementById("test-error");
+      el.textContent = msg;
+      el.classList.add("error");
+      el.style.display = "block";
+    }
+    function hideError() {
+      const el = document.getElementById("test-error");
+      el.textContent = "";
+      el.classList.remove("error");
+      el.style.display = "none";
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/\"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+    }
+
+    function getLevelLabel(score) {
+      if (score < 60) return t("level.low");
+      if (score < 85) return t("level.medium");
+      return t("level.high");
+    }
+
+    function getScoreTone(score) {
+      const value = Number(score || 0);
+      if (value < 60) return "low";
+      if (value < 85) return "medium";
+      return "high";
+    }
+
+    function scoreToneClass(score, base) {
+      return `${base}-${getScoreTone(score)}`;
+    }
+
+    function buildTopicResources(subjectName, weakTopics) {
+      const resources = [];
+      const seen = new Set();
+
+      if (subjectName) {
+        const subjectQuery = encodeURIComponent(`${subjectName} обучение курс`);
+        const subjectArticleUrl = `https://www.google.com/search?q=${subjectQuery}`;
+        const subjectVideoUrl = `https://www.youtube.com/results?search_query=${subjectQuery}`;
+        [
+          {
+            title: t("test.subject_articles", { subject: subjectName }),
+            url: subjectArticleUrl,
+            description: t("test.subject_articles_desc", { subject: subjectName }),
+          },
+          {
+            title: t("test.subject_videos", { subject: subjectName }),
+            url: subjectVideoUrl,
+            description: t("test.subject_videos_desc", { subject: subjectName }),
+          },
+        ].forEach(item => {
+          if (!seen.has(item.url)) {
+            seen.add(item.url);
+            resources.push(item);
+          }
+        });
+      }
+
+      weakTopics.slice(0, 3).forEach(topic => {
+        const articleUrl = `https://www.google.com/search?q=${encodeURIComponent(topic.topic_name)}`;
+        const videoUrl = `https://www.youtube.com/results?search_query=${encodeURIComponent(topic.topic_name + " разбор")}`;
+        [
+          {
+            title: t("test.topic_articles", { topic: topic.topic_name }),
+            url: articleUrl,
+            description: t("test.topic_articles_desc", { topic: topic.topic_name }),
+          },
+          {
+            title: t("test.topic_videos", { topic: topic.topic_name }),
+            url: videoUrl,
+            description: t("test.topic_videos_desc", { topic: topic.topic_name }),
+          },
+        ].forEach(item => {
+          if (!seen.has(item.url)) {
+            seen.add(item.url);
+            resources.push(item);
+          }
+        });
+      });
+
+      return resources;
+    }
+
+    function buildWeakTopics(test) {
+      const results = Array.isArray(test.results) ? test.results : [];
+      const mistakesByTopic = new Map();
+
+      results.forEach(result => {
+        if (result.is_correct) return;
+        const question = currentQuestions.find(item => item.id === result.question_id);
+        if (!question) return;
+        const topicId = question.topic_id;
+        const topicName = currentTopicsMap[topicId] || t("test.weak_topic_fallback", { id: topicId });
+        const existing = mistakesByTopic.get(topicId) || { topic_id: topicId, topic_name: topicName, mistakes: 0 };
+        existing.mistakes += 1;
+        mistakesByTopic.set(topicId, existing);
+      });
+
+      return Array.from(mistakesByTopic.values()).sort((a, b) => b.mistakes - a.mistakes);
+    }
+
+    function resetTestState() {
+      document.getElementById("test-summary").style.display = "none";
+      document.getElementById("test-questions").style.display = "none";
+      document.getElementById("test-start").style.display = "block";
+      currentTestId = null;
+      currentQuestions = [];
+      currentTopicsMap = {};
+      renderJson("test-result", t("common.no_data"));
+      hideError();
+    }
+
+    function renderSummary(test) {
+      const total = Array.isArray(test.results) ? test.results.length : 0;
+      const correct = Array.isArray(test.results) ? test.results.filter(r => r.is_correct).length : 0;
+      const wrong = Math.max(total - correct, 0);
+      const score = typeof test.score === "number" ? test.score : 0;
+      const recommendations = Array.isArray(test.recommendations)
+        ? test.recommendations.map(r => r.recommendation_text).filter(Boolean)
+        : [];
+      const weakTopics = buildWeakTopics(test);
+      const tone = getScoreTone(score);
+      const summaryScreen = document.querySelector("#test-summary .result-screen");
+      const levelEl = document.getElementById("summary-level");
+      const scoreEl = document.getElementById("summary-score");
+
+      if (summaryScreen) {
+        summaryScreen.classList.remove("glow-low", "glow-medium", "glow-high");
+        summaryScreen.classList.add(`glow-${tone}`);
+      }
+      if (levelEl) {
+        levelEl.classList.remove("score-pill-low", "score-pill-medium", "score-pill-high");
+        levelEl.classList.add(scoreToneClass(score, "score-pill"));
+      }
+      if (scoreEl) {
+        scoreEl.classList.remove("score-tone-low", "score-tone-medium", "score-tone-high");
+        scoreEl.classList.add(scoreToneClass(score, "score-tone"));
+      }
+
+      document.getElementById("summary-score").textContent = `${score}%`;
+      document.getElementById("summary-level").textContent = t("test.level_prefix", { level: getLevelLabel(score) });
+      document.getElementById("summary-correct").textContent = String(correct);
+      document.getElementById("summary-total").textContent = String(total);
+      document.getElementById("summary-wrong").textContent = String(wrong);
+      document.getElementById("summary-recommendations").textContent = recommendations.length
+        ? recommendations.join("\n\n")
+        : t("test.no_recommendations");
+      document.getElementById("summary-weak-topics").textContent = weakTopics.length
+        ? weakTopics.map(topic => `${topic.topic_name} (${topic.mistakes})`).join(", ")
+        : t("test.no_clear_weak_topics");
+
+      // Внешний поиск пользователю больше не показываем:
+      // материалы и правильные ответы открываются на странице разбора вопроса.
+      document.getElementById("summary-topic-resources").innerHTML =
+        `<div class="analytics-empty">${escapeHtml(t("test.materials_in_explanation"))}</div>`;
+
+      const badResults = Array.isArray(test.results)
+        ? test.results.filter(r => !r.is_correct)
+        : [];
+
+      const badQuestions = badResults.map((r, idx) => {
+        const q = currentQuestions.find(item => item.id === r.question_id);
+        const text = q?.question_text || `Вопрос ${r.question_id}`;
+        return {
+          idx,
+          question_id: r.question_id,
+          text,
+        };
+      });
+
+      document.getElementById("summary-question-plan").innerHTML = badQuestions.length
+        ? badQuestions.map(item => `
+            <div class="result-resource-card">
+              <div class="result-resource-title">${escapeHtml(item.idx + 1)}. ${escapeHtml(item.text)}</div>
+              <a class="btn" href="/app/question-explanation.html?test_id=${encodeURIComponent(test.id)}&question_id=${encodeURIComponent(item.question_id)}" target="_blank" rel="noreferrer">
+                ${escapeHtml(t("test.open_question_explanation"))}
+              </a>
+            </div>
+          `).join("")
+        : `<div class="analytics-empty">${escapeHtml(t("test.no_bad_questions"))}</div>`;
+
+      document.getElementById("test-start").style.display = "none";
+      document.getElementById("test-questions").style.display = "none";
+      document.getElementById("test-summary").style.display = "block";
+    }
+
+    document.getElementById("btn-start-test").addEventListener("click", async () => {
+      hideError();
+      try {
+        const subjectId = parseInt(document.getElementById("subject-id").value, 10);
+        if (!subjectId) { showError(t("test.select_subject_alert")); return; }
+        currentSubjectName = document.getElementById("subject-id").selectedOptions[0]?.textContent || "";
+        const testType = document.getElementById("test-type").value;
+        const test = await Api.request("/tests/", { method: "POST", auth: true, body: { subject_id: subjectId, test_type: testType } });
+        currentTestId = test.id;
+        const [questions, topics] = await Promise.all([
+          Api.request(`/subjects/${subjectId}/questions?test_type=${testType}`),
+          Api.request(`/subjects/${subjectId}/topics`),
+        ]);
+        currentTopicsMap = {};
+        (topics || []).forEach(topic => {
+          currentTopicsMap[topic.id] = topic.name;
+        });
+        if (!questions || questions.length === 0) {
+          showError(t("test.no_questions"));
+          return;
+        }
+        currentQuestions = questions;
+        const list = document.getElementById("questions-list");
+        list.innerHTML = "";
+        questions.forEach((q, i) => {
+          const div = document.createElement("div");
+          div.className = "question-block";
+          div.innerHTML = `<div class="question-title">${i + 1}. ${q.question_text}</div>`;
+          const answersDiv = document.createElement("div");
+          answersDiv.className = "question-answers";
+          q.answers.forEach(a => {
+            const label = document.createElement("label");
+            label.className = "answer-option";
+            const radio = document.createElement("input");
+            radio.type = "radio";
+            radio.name = "q_" + q.id;
+            radio.value = a.id;
+            radio.dataset.questionId = q.id;
+            radio.addEventListener("change", () => {
+              // Снимаем подсветку со всех ответов этого вопроса
+              document
+                .querySelectorAll(`input[name="${radio.name}"]`)
+                .forEach(r => r.closest(".answer-option")?.classList.remove("answer-option--selected"));
+
+              if (radio.checked) {
+                radio.closest(".answer-option")?.classList.add("answer-option--selected");
+              }
+            });
+            const text = document.createElement("span");
+            text.className = "answer-option-text";
+            text.textContent = a.answer_text;
+            label.appendChild(radio);
+            label.appendChild(text);
+            answersDiv.appendChild(label);
+          });
+          div.appendChild(answersDiv);
+          list.appendChild(div);
+        });
+        document.getElementById("test-start").style.display = "none";
+        document.getElementById("test-questions").style.display = "block";
+        renderJson("test-result", t("test.answer_and_submit"));
+      } catch (e) {
+        if (e.message === "SESSION_EXPIRED") return;
+        showError(t("test.error", { message: e.message || String(e) }));
+      }
+    });
+
+    document.getElementById("btn-submit-test").addEventListener("click", async () => {
+      if (!currentTestId) return;
+      const answers = [];
+      currentQuestions.forEach(q => {
+        const radio = document.querySelector(`input[name="q_${q.id}"]:checked`);
+        answers.push({ question_id: q.id, selected_answer_id: radio ? parseInt(radio.value, 10) : null });
+      });
+      try {
+        const test = await Api.request(`/tests/${currentTestId}/submit`, { method: "POST", auth: true, body: answers });
+        renderSummary(test);
+        currentTestId = null;
+        currentQuestions = [];
+      } catch (e) {
+        renderJson("test-result", e.message, true);
+      }
+    });
+
+    document.getElementById("btn-cancel-test").addEventListener("click", () => {
+      resetTestState();
+    });
+
+    document.getElementById("btn-restart-test").addEventListener("click", () => {
+      resetTestState();
+    });
+
+    applyI18n(document);
+  </script>
+</body>
+</html>

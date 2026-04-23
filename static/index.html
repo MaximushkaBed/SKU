@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <title data-i18n-title="index.title">Система самоконтроля подготовки</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="/app/app.css?v=18" />
+</head>
+<body class="page-home">
+  <div class="page">
+    <header class="header site-header site-header-main">
+      <div class="site-header-main-inner">
+        <div class="site-header-main-left">
+          <span class="site-brand-text">Самоконтроль подготовки</span>
+        </div>
+        <div class="site-header-main-right">
+          <a class="btn" href="/app/login.html" id="nav-login" data-i18n="nav.login">Войти</a>
+          <a class="btn btn-primary" href="/app/register.html" id="nav-register" data-i18n="nav.register">Регистрация</a>
+        </div>
+      </div>
+    </header>
+
+    <section class="hero-block">
+      <h1 data-i18n-html="index.hero_title">Готовьтесь к экзаменам<br/>с понятной оценкой прогресса</h1>
+      <p class="tagline" data-i18n="index.hero_tagline">
+        Система собирает результаты тестов, оценивает уровень готовности и формирует
+        персональные рекомендации и расписание повторений.
+      </p>
+      <div class="hero-actions" id="hero-actions-guest">
+        <a class="btn btn-primary" href="/app/register.html" data-i18n="index.start_now">Начать сейчас</a>
+        <a class="btn" href="/app/login.html" data-i18n="index.login_dashboard">Войти в кабинет</a>
+      </div>
+      <div class="hero-actions" id="hero-actions-auth" style="display:none;">
+        <a class="btn btn-primary" href="/app/dashboard.html" data-i18n="index.go_dashboard">Перейти в кабинет</a>
+        <a class="btn" href="/app/analytics.html" data-i18n="nav.analytics">Аналитика</a>
+      </div>
+    </section>
+
+    <div class="bento">
+      <div class="bento-item span-6">
+        <h3 data-i18n="index.features_title">Возможности</h3>
+        <ul>
+          <li data-i18n="index.feature_1">Тестирование по предметам и темам</li>
+          <li data-i18n="index.feature_2">История попыток и динамика</li>
+          <li data-i18n="index.feature_3">Рекомендации по подготовке</li>
+          <li data-i18n="index.feature_4">Расписание занятий и уведомления</li>
+          <li data-i18n="index.feature_5">Интеграции с внешними сервисами</li>
+        </ul>
+      </div>
+      <div class="bento-item span-6">
+        <h3 data-i18n="index.how_title">Как это работает</h3>
+        <div class="kpi">
+          <div class="item">
+            <div class="num">0–100%</div>
+            <div class="lbl" data-i18n="index.kpi_readiness">уровень готовности</div>
+          </div>
+          <div class="item">
+            <div class="num" data-i18n="index.kpi_topics_num">Темы</div>
+            <div class="lbl" data-i18n="index.kpi_topics_lbl">слабые места</div>
+          </div>
+          <div class="item">
+            <div class="num" data-i18n="index.kpi_plan_num">План</div>
+            <div class="lbl" data-i18n="index.kpi_plan_lbl">повторений</div>
+          </div>
+        </div>
+        <div style="margin-top:20px;">
+          <a class="btn" href="/app/dashboard.html" data-i18n="index.open_dashboard">Открыть кабинет</a>
+        </div>
+      </div>
+    </div>
+
+    <footer class="footer">
+      <div>
+        <strong data-i18n="index.contacts">Контакты</strong><br/>
+        <span class="small">batamir5@gmail.com · +77777777777</span>
+      </div>
+    </footer>
+  </div>
+
+  <script src="/app/app.js?v=18"></script>
+  <script>
+    (function() {
+      I18N.ru["index.title"] = "Система самоконтроля подготовки";
+      I18N.kz["index.title"] = "Дайындықты өзін-өзі бақылау жүйесі";
+      I18N.ru["index.hero_title"] = "Готовьтесь к экзаменам<br/>с понятной оценкой прогресса";
+      I18N.kz["index.hero_title"] = "Емтиханға дайындалыңыз<br/>үлгерімді түсінікті бағалаумен";
+      I18N.ru["index.hero_tagline"] = "Система собирает результаты тестов, оценивает уровень готовности и формирует персональные рекомендации и расписание повторений.";
+      I18N.kz["index.hero_tagline"] = "Жүйе тест нәтижелерін жинайды, дайындық деңгейін бағалайды және жеке ұсыныстар мен қайталау кестесін құрады.";
+      I18N.ru["index.start_now"] = "Начать сейчас";
+      I18N.kz["index.start_now"] = "Қазір бастау";
+      I18N.ru["index.login_dashboard"] = "Войти в кабинет";
+      I18N.kz["index.login_dashboard"] = "Кабинетке кіру";
+      I18N.ru["index.features_title"] = "Возможности";
+      I18N.kz["index.features_title"] = "Мүмкіндіктер";
+      I18N.ru["index.feature_1"] = "Тестирование по предметам и темам";
+      I18N.kz["index.feature_1"] = "Пәндер мен тақырыптар бойынша тестілеу";
+      I18N.ru["index.feature_2"] = "История попыток и динамика";
+      I18N.kz["index.feature_2"] = "Тапсыру тарихы мен динамика";
+      I18N.ru["index.feature_3"] = "Рекомендации по подготовке";
+      I18N.kz["index.feature_3"] = "Дайындық бойынша ұсыныстар";
+      I18N.ru["index.feature_4"] = "Расписание занятий и уведомления";
+      I18N.kz["index.feature_4"] = "Сабақ кестесі мен хабарламалар";
+      I18N.ru["index.feature_5"] = "Интеграции с внешними сервисами";
+      I18N.kz["index.feature_5"] = "Сыртқы сервистермен интеграциялар";
+      I18N.ru["index.how_title"] = "Как это работает";
+      I18N.kz["index.how_title"] = "Бұл қалай жұмыс істейді";
+      I18N.ru["index.kpi_readiness"] = "уровень готовности";
+      I18N.kz["index.kpi_readiness"] = "дайындық деңгейі";
+      I18N.ru["index.kpi_topics_num"] = "Темы";
+      I18N.kz["index.kpi_topics_num"] = "Тақырыптар";
+      I18N.ru["index.kpi_topics_lbl"] = "слабые места";
+      I18N.kz["index.kpi_topics_lbl"] = "әлсіз тұстар";
+      I18N.ru["index.kpi_plan_num"] = "План";
+      I18N.kz["index.kpi_plan_num"] = "Жоспар";
+      I18N.ru["index.kpi_plan_lbl"] = "повторений";
+      I18N.kz["index.kpi_plan_lbl"] = "қайталау";
+      I18N.ru["index.open_dashboard"] = "Открыть кабинет";
+      I18N.kz["index.open_dashboard"] = "Кабинетті ашу";
+      I18N.ru["index.contacts"] = "Контакты";
+      I18N.kz["index.contacts"] = "Байланыс";
+
+      I18N.ru["index.go_dashboard"] = "Перейти в кабинет";
+      I18N.kz["index.go_dashboard"] = "Кабинетке өту";
+
+      // Auto-redirect logged-in users to dashboard immediately (before DOM load)
+      (function() {
+        var token = Api.getToken();
+        var payload = token ? Api.decodeJwt(token) : null;
+        var isLoggedIn = !!(payload && payload.sub && payload.role && payload.exp && payload.exp * 1000 > Date.now());
+        if (isLoggedIn) {
+          window.location.replace("/app/dashboard.html");
+        }
+      })();
+
+      document.addEventListener("DOMContentLoaded", function() {
+        applyI18n(document);
+      });
+    })();
+  </script>
+</body>
+</html>

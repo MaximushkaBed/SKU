@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <title data-i18n-title="explanation.title">Разбор вопроса — Самоконтроль подготовки</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="/app/app.css?v=18" />
+</head>
+<body>
+  <div class="page">
+    <header class="header site-header site-header-main">
+      <div class="site-header-main-inner">
+        <div class="site-header-main-left">
+          <a class="btn" href="/app/dashboard.html" data-i18n="nav.dashboard">Кабинет</a>
+        </div>
+        <div class="site-header-main-right">
+          <a class="btn" href="/app/test.html" data-i18n="nav.test">Пройти тест</a>
+          <a class="btn" href="/app/history.html" data-i18n="nav.history">История</a>
+          <a class="btn" href="/app/plan.html" data-i18n="nav.plan">План</a>
+          <a class="btn" href="/app/analytics.html" data-i18n="nav.analytics">Аналитика</a>
+          <button class="btn btn-danger" id="btn-exit" type="button" data-i18n="nav.logout">Выйти</button>
+        </div>
+      </div>
+    </header>
+
+    <div class="card dash-main">
+      <div id="explanation-error" class="log error" style="display:none;"></div>
+
+      <div class="section-title" data-i18n="explanation.header">Разбор вопроса</div>
+
+      <div class="result-recommendations" style="margin-top:12px;">
+        <div class="result-block-title" data-i18n="explanation.meta">Контекст</div>
+        <div class="result-recommendation-text" id="explanation-meta">—</div>
+      </div>
+
+      <div class="result-recommendations" style="margin-top:14px;">
+        <div class="result-block-title" data-i18n="explanation.question">Вопрос</div>
+        <div class="result-recommendation-text" id="explanation-question">—</div>
+      </div>
+
+      <div class="result-recommendations" style="margin-top:14px;">
+        <div class="result-block-title" data-i18n="explanation.your_answer">Ваш ответ</div>
+        <div class="result-recommendation-text" id="explanation-your-answer">—</div>
+      </div>
+
+      <div class="result-recommendations" style="margin-top:14px;">
+        <div class="result-block-title" data-i18n="explanation.correct_answer">Правильный ответ</div>
+        <div id="explanation-correct-answers" class="result-resource-list"></div>
+      </div>
+
+      <div class="result-recommendations" style="margin-top:14px;">
+        <div class="result-block-title" data-i18n="explanation.resources">Материалы</div>
+        <div id="explanation-resources" class="result-resource-list"></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/app/app.js?v=18"></script>
+  <script>
+    I18N.ru["explanation.title"] = "Разбор вопроса — Самоконтроль подготовки";
+    I18N.kz["explanation.title"] = "Сұрақ талдауы — Дайындықты өзін-өзі бақылау";
+
+    I18N.ru["explanation.header"] = "Разбор вопроса";
+    I18N.kz["explanation.header"] = "Сұрақ талдауы";
+
+    I18N.ru["explanation.meta"] = "Контекст";
+    I18N.kz["explanation.meta"] = "Контекст";
+
+    I18N.ru["explanation.question"] = "Вопрос";
+    I18N.kz["explanation.question"] = "Сұрақ";
+
+    I18N.ru["explanation.your_answer"] = "Ваш ответ";
+    I18N.kz["explanation.your_answer"] = "Сіздің жауабыңыз";
+
+    I18N.ru["explanation.correct_answer"] = "Правильный ответ";
+    I18N.kz["explanation.correct_answer"] = "Дұрыс жауап";
+
+    I18N.ru["explanation.resources"] = "Материалы";
+    I18N.kz["explanation.resources"] = "Материалдар";
+
+    I18N.ru["explanation.status_unanswered"] = "Вы не ответили на вопрос.";
+    I18N.kz["explanation.status_unanswered"] = "Сіз бұл сұраққа жауап бермедіңіз.";
+
+    I18N.ru["explanation.status_incorrect"] = "Ваш ответ был не верен.";
+    I18N.kz["explanation.status_incorrect"] = "Сіздің жауабыңыз дұрыс емес.";
+
+    I18N.ru["explanation.no_answer"] = "—";
+    I18N.kz["explanation.no_answer"] = "—";
+
+    I18N.ru["explanation.no_resources"] = "Материалы не подобраны для этого предмета.";
+    I18N.kz["explanation.no_resources"] = "Бұл пән бойынша материалдар табылмады.";
+
+    const payload = requireAuthOrRedirect();
+    if (!payload) { /* redirected */ }
+
+    function $(id) { return document.getElementById(id); }
+
+    function escapeHtml(value) {
+      return String(value ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/\"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+    }
+
+    function setError(msg) {
+      const el = $("explanation-error");
+      if (!el) return;
+      el.textContent = msg;
+      el.style.display = "block";
+    }
+
+    function renderAnswers(answers, rootId) {
+      const el = $(rootId);
+      if (!el) return;
+      if (!Array.isArray(answers) || answers.length === 0) {
+        el.innerHTML = `<div class="analytics-empty">${escapeHtml(t("explanation.no_answer"))}</div>`;
+        return;
+      }
+      el.innerHTML = answers.map((text, idx) => `
+        <div class="result-resource-card">
+          <div class="result-resource-title">${escapeHtml(idx + 1)}</div>
+          <div class="result-resource-text">${escapeHtml(text)}</div>
+        </div>
+      `).join("");
+    }
+
+    function renderResources(resources) {
+      const el = $("explanation-resources");
+      if (!el) return;
+      if (!Array.isArray(resources) || resources.length === 0) {
+        el.innerHTML = `<div class="analytics-empty">${escapeHtml(t("explanation.no_resources"))}</div>`;
+        return;
+      }
+      el.innerHTML = resources.map(r => `
+        <div class="result-resource-card">
+          <div class="result-resource-title">${escapeHtml(r.title)}</div>
+          <div class="result-resource-text">${escapeHtml(r.description || "")}</div>
+          <a class="btn" href="${escapeHtml(r.url)}" target="_blank" rel="noreferrer">${escapeHtml(t("common.open"))}</a>
+        </div>
+      `).join("");
+    }
+
+    function getQueryParam(name) {
+      const params = new URLSearchParams(window.location.search);
+      return params.get(name);
+    }
+
+    (async () => {
+      try {
+        const testId = parseInt(getQueryParam("test_id"), 10);
+        const questionId = parseInt(getQueryParam("question_id"), 10);
+        if (!testId || !questionId) {
+          setError("Некорректные параметры страницы.");
+          return;
+        }
+
+        const data = await Api.request(`/tests/${testId}/questions/${questionId}/explanation`, { auth: true });
+
+        $("explanation-meta").textContent =
+          `${data.subject_name ? escapeHtml(data.subject_name) : "—"} · ${data.topic_name ? escapeHtml(data.topic_name) : "—"}`;
+
+        $("explanation-question").textContent = data.question_text || "—";
+
+        const statusText =
+          data.status === "unanswered" ? t("explanation.status_unanswered") :
+          (data.status === "incorrect" ? t("explanation.status_incorrect") : "");
+
+        const yourAnsText = data.selected_answer_text ? data.selected_answer_text : t("explanation.no_answer");
+        $("explanation-your-answer").textContent =
+          statusText ? `${statusText} ${yourAnsText}` : yourAnsText;
+
+        renderAnswers(data.correct_answers, "explanation-correct-answers");
+        renderResources(data.resources);
+      } catch (e) {
+        if (e.message === "SESSION_EXPIRED") return;
+        setError(e.message || String(e));
+      } finally {
+        applyI18n(document);
+      }
+    })();
+
+    const exitBtn = document.getElementById("btn-exit");
+    if (exitBtn) exitBtn.onclick = () => { Api.setToken(null); window.location.href = "/app/"; };
+  </script>
+</body>
+</html>
+
