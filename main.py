@@ -10,6 +10,7 @@ from auth import DBSession, get_current_user, get_password_hash, login_for_acces
 from database import Base, engine, ensure_sqlite_schema, SessionLocal
 from models import Subject, User
 from seed_tests import ensure_default_tests
+from seed_demo import seed as seed_demo_students
 
 # Предметы по умолчанию (преподаватели создают тесты только по ним)
 DEFAULT_SUBJECTS = [
@@ -80,6 +81,12 @@ async def lifespan(app: FastAPI):
     ensure_default_admin()
     ensure_default_subjects()
     ensure_default_tests()
+    try:
+        seed_demo_students()
+    except SystemExit:
+        pass
+    except Exception as exc:
+        print(f"[seed_demo] skipped: {exc}")
     yield
 
 
