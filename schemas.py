@@ -16,7 +16,9 @@ class UserCreate(UserBase):
     role: Optional[str] = UserRoleEnum.STUDENT
 
 
-class UserRead(UserBase):
+class UserRead(BaseModel):
+    full_name: str
+    email: str
     id: int
     role: str
 

@@ -31,7 +31,7 @@ from models import Answer, Notification, Question, Recommendation, Schedule, Sub
 DEMO_STUDENTS = [
     {
         "full_name": "Айгерим Сейткали",
-        "email": "aigerim.demo@student.test",
+        "email": "aigerim.demo@student.kz",
         "password": "Demo1234",
         # accuracy per subject (0-1), None = пропустить предмет
         "subject_accuracy": {
@@ -46,7 +46,7 @@ DEMO_STUDENTS = [
     },
     {
         "full_name": "Данияр Ахметов",
-        "email": "daniyar.demo@student.test",
+        "email": "daniyar.demo@student.kz",
         "password": "Demo1234",
         "subject_accuracy": {
             1: 0.72,   # Казахский язык
@@ -59,7 +59,7 @@ DEMO_STUDENTS = [
     },
     {
         "full_name": "Карина Петрова",
-        "email": "karina.demo@student.test",
+        "email": "karina.demo@student.kz",
         "password": "Demo1234",
         "subject_accuracy": {
             2: 0.62,   # Английский язык
@@ -72,7 +72,7 @@ DEMO_STUDENTS = [
     },
     {
         "full_name": "Нурлан Касымов",
-        "email": "nurlan.demo@student.test",
+        "email": "nurlan.demo@student.kz",
         "password": "Demo1234",
         "subject_accuracy": {
             1: 0.42,   # Казахский язык
@@ -84,7 +84,7 @@ DEMO_STUDENTS = [
     },
     {
         "full_name": "Алия Жумабекова",
-        "email": "aliya.demo@student.test",
+        "email": "aliya.demo@student.kz",
         "password": "Demo1234",
         "subject_accuracy": {
             3: 0.28,   # Русский язык
