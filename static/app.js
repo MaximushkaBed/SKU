@@ -1,5 +1,5 @@
 const Api = (() => {
-  const apiBase = "http://192.168.9.212:3000";
+  const apiBase = "";
 
   function getToken() {
     return localStorage.getItem("access_token");
